@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "name": "plipli9-paranormal",
-  "alias": ["plipli9paranormal.com", "www.plipli9paranormal.com"],
-  "regions": ["iad1", "fra1"],
+  "name": "pliti9-paranormal",
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
@@ -80,9 +78,5 @@
       "source": "/robots.txt",
       "destination": "/api/robots"
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_VERCEL_ENV": "@vercel-env",
-    "NEXT_PUBLIC_VERCEL_URL": "@vercel-url"
-  }
+  ]
 } 
