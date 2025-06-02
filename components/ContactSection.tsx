@@ -3,7 +3,27 @@
 import React, { useState } from 'react'
 import { Mail, MessageCircle, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react'
 
-const ContactSection = () => {
+interface ContactSectionProps {
+  siteSettings?: {
+    contact?: {
+      email?: string
+      instagram?: string
+      tiktok?: string
+      youtube?: string
+      phone?: string
+    }
+    liveSettings?: {
+      livePricing?: {
+        individual?: number
+        package3?: number
+        monthly?: number
+      }
+      schedule?: string
+    }
+  }
+}
+
+const ContactSection = ({ siteSettings }: ContactSectionProps) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,10 +47,28 @@ const ContactSection = () => {
     setTimeout(() => setSubmitStatus('idle'), 5000)
   }
 
+  // Datele din Sanity sau fallback
+  const contact = siteSettings?.contact || {}
+  const liveSettings = siteSettings?.liveSettings || {}
+  
+  const email = contact.email || 'contact@plipli9paranormal.com'
+  const instagram = contact.instagram || '@plipli9paranormal'
+  const tiktok = contact.tiktok || '@plipli9paranormal'
+  const youtube = contact.youtube || '@plipli9paranormal'
+  const phone = contact.phone || ''
+  const individualPrice = liveSettings?.livePricing?.individual || 25
+  const packagePrice = liveSettings?.livePricing?.package3 || 60
+  const monthlyPrice = liveSettings?.livePricing?.monthly || 150
+  const schedule = liveSettings?.schedule || 'De obicei vinerea și sâmbăta seara, începând cu ora 21:00'
+
   const faqItems = [
     {
       question: 'Cât costă accesul la un LIVE paranormal?',
-      answer: 'LIVE-urile paranormale costă 25 RON și includ acces complet la transmisiune, chat în timp real și înregistrarea pentru 24h.'
+      answer: `LIVE-urile paranormale costă ${individualPrice} RON și includ acces complet la transmisiune, chat în timp real și înregistrarea pentru 24h.`
+    },
+    {
+      question: 'Există pachete disponibile?',
+      answer: `Da! Avem pachetul de 3 LIVE-uri la ${packagePrice} RON și accesul lunar complet la ${monthlyPrice} RON pentru toate transmisiunile.`
     },
     {
       question: 'Cum primesc codul de acces după plată?',
@@ -38,7 +76,7 @@ const ContactSection = () => {
     },
     {
       question: 'Când se desfășoară LIVE-urile?',
-      answer: 'De obicei vinerea și sâmbăta seara, începând cu ora 21:00. Urmărește anunțurile pentru programul exact.'
+      answer: schedule
     },
     {
       question: 'Pot participa fizic la investigații?',
@@ -138,17 +176,27 @@ const ContactSection = () => {
               </div>
             )}
 
-            {/* Contact Info */}
+            {/* Contact Info din Sanity */}
             <div className="space-y-4 pt-6">
               <h4 className="text-lg font-semibold text-white">Contact Direct</h4>
               <div className="space-y-3">
                 <a 
-                  href="mailto:contact@plipli9paranormal.com" 
+                  href={`mailto:${email}`}
                   className="flex items-center space-x-3 text-paranormal-200 hover:text-mystery-400 transition-colors"
                 >
                   <Mail className="w-5 h-5" />
-                  <span>contact@plipli9paranormal.com</span>
+                  <span>{email}</span>
                 </a>
+                
+                {phone && (
+                  <a 
+                    href={`tel:${phone}`}
+                    className="flex items-center space-x-3 text-paranormal-200 hover:text-mystery-400 transition-colors"
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span>{phone}</span>
+                  </a>
+                )}
                 
                 <div className="flex items-center space-x-3 text-paranormal-200">
                   <MapPin className="w-5 h-5" />
@@ -156,31 +204,34 @@ const ContactSection = () => {
                 </div>
               </div>
 
-              {/* Social Media */}
+              {/* Social Media din Sanity */}
               <div className="pt-4">
                 <h4 className="text-lg font-semibold text-white mb-3">Urmărește-ne</h4>
                 <div className="flex space-x-4">
                   <a 
-                    href="https://tiktok.com/@plipli9paranormal" 
+                    href={`https://tiktok.com/${tiktok.replace('@', '')}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
+                    title={`TikTok: ${tiktok}`}
                   >
                     <span className="text-sm font-bold">TT</span>
                   </a>
                   <a 
-                    href="https://instagram.com/plipli9paranormal" 
+                    href={`https://instagram.com/${instagram.replace('@', '')}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
+                    title={`Instagram: ${instagram}`}
                   >
                     <span className="text-sm font-bold">IG</span>
                   </a>
                   <a 
-                    href="https://youtube.com/@plipli9paranormal" 
+                    href={`https://youtube.com/${youtube.replace('@', '')}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-10 h-10 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
+                    title={`YouTube: ${youtube}`}
                   >
                     <span className="text-sm font-bold">YT</span>
                   </a>
@@ -189,7 +240,7 @@ const ContactSection = () => {
             </div>
           </div>
 
-          {/* FAQ Section */}
+          {/* FAQ Section cu prețuri din Sanity */}
           <div className="space-y-6">
             <h3 className="text-2xl font-bold text-white mb-6">Întrebări Frecvente</h3>
             
