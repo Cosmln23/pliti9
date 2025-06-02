@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "date": "15 Februarie",
+      "title": "LIVE în Castelul Bran",
+      "price": "30 lei",
+      "description": "Investigație paranormală în cel mai bântuit castel din România"
+    },
+    {
+      "date": "22 Februarie", 
+      "title": "Investigație Cimitirul Bellu",
+      "price": "25 lei",
+      "description": "Explorare nocturnă în cel mai misterios cimitir din București"
+    },
+    {
+      "date": "1 Martie",
+      "title": "LIVE Special Pădurea Hoia Baciu",  
+      "price": "35 lei",
+      "description": "Experiență paranormală în cea mai bântuită pădure din lume"
+    }
+  ]
+} 
