@@ -1,33 +1,47 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    appDir: true,
+    // appDir este activat automat în Next.js 14, nu mai e nevoie să îl specificăm
   },
-  images: {
-    domains: ['livepeer.studio', 'gateway.livepeer.studio'],
-  },
+  
   // Optimizări pentru streaming video
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    return config;
+  images: {
+    domains: [
+      'livepeercdn.studio',
+      'vod-cdn.lp-playback.studio',
+      'images.unsplash.com',
+      'cdn.plipli9paranormal.com'
+    ],
+    formats: ['image/webp', 'image/avif'],
   },
-  // Headers pentru CORS și securitate
+  
+  // Headers pentru securitate și CORS
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
-    ];
+    ]
+  },
+  
+  // Webpack pentru optimizări
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Optimizări pentru video streaming
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      }
+    }
+    
+    return config
   },
 }
 
