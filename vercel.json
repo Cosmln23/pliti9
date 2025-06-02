@@ -7,11 +7,6 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "public": true,
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
