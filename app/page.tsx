@@ -87,87 +87,55 @@ const HomePage = () => {
       <section className="py-16 bg-paranormal-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
-              <div className="w-12 h-12 bg-mystery-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Users className="w-6 h-6 text-mystery-600" />
+          {/* About Plipli9 Section */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-mystery-600 rounded-full flex items-center justify-center mx-auto mb-6 mystery-glow">
+                  <Ghost className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-paranormal-800 mb-4">
+                  Despre Plipli9
+                </h2>
               </div>
-              <div className="text-2xl font-bold text-paranormal-800">5000+</div>
-              <div className="text-sm text-paranormal-600">Exploratori</div>
-            </div>
-            
-            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
-              <div className="w-12 h-12 bg-ghost-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <MapPin className="w-6 h-6 text-ghost-600" />
+              
+              <div className="prose prose-lg max-w-none text-paranormal-700 leading-relaxed space-y-6">
+                <p>
+                  <strong>Peste 100 de locații</strong>, atât în România cât și în străinătate, am explorat de-a lungul anilor, totul dintr-o pasiune nestinsă pentru paranormal și o curiozitate pe care știința n-a reușit niciodată să o stingă. Plipli9 a prins viață în 2016, condus de dorința de a găsi răspunsuri acolo unde nimeni nu le caută.
+                </p>
+                
+                <p>
+                  Totul a început cu <strong>Pădurea Hoia Baciu</strong> – locul care, de mic copil, mi-a aprins imaginația cu povești și legende misterioase. În acea pădure, am simțit pentru prima dată că lumea pe care o știm ascunde lucruri neîmpărtășite – sunete venite de nicăieri, apariții inexplicabile și senzația clară că ești urmărit de ceva invizibil.
+                </p>
+                
+                <div className="bg-mystery-50 p-6 rounded-xl border-l-4 border-mystery-500">
+                  <p className="text-mystery-800 italic">
+                    O întâlnire stranie mi-a schimbat viața pentru totdeauna: într-o piață din județul Cluj, o femeie în vârstă s-a apropiat de mine și mi-a spus, fără să mă cunoască:<br/>
+                    <strong>"Băiete, când vei merge în pădure, să nu te uiți la copacul 39."</strong><br/>
+                    De atunci, totul a luat o întorsătură ciudată – numărul 39 a apărut peste tot, deși, ani la rând, n-am reușit să-i aflu adevărata semnificație.
+                  </p>
+                </div>
+                
+                <p>
+                  Pe parcursul acestor ani, am adunat dovezi și am trăit experiențe unice, culminând cu <strong>păpușa Matilda</strong> – cumpărată din Canada, blestemată de o femeie care și-a pierdut copilul și a încercat să își răzbune suferința printr-un ritual întunecat. Matilda e o păpușă unică și bântuită, iar povestea ei e doar una dintre multele enigme care definesc Plipli9.
+                </p>
+                
+                <p>
+                  Plipli9 a început din dorința de a demonstra că paranormalul există cu adevărat – o pasiune născută din poveștile copilăriei și întâlniri misterioase care m-au urmărit toată viața. Eu sunt Plipli9 – un căutător de adevăruri ascunse, un investigator care îndrăznește să pășească acolo unde alții doar povestesc.
+                </p>
+                
+                <div className="text-center mt-8 p-6 bg-paranormal-900 rounded-xl">
+                  <div className="flex items-center justify-center mb-4">
+                    <Moon className="w-8 h-8 text-mystery-400 mr-3" />
+                    <p className="text-xl font-bold text-white">
+                      Trebuie să crezi în paranormal, trebuie să vrei – și cu siguranță implicarea aduce rezultate.
+                    </p>
+                  </div>
+                  <p className="text-mystery-200 italic">
+                    Aceasta e povestea Plipli9 – un drum misterios, care îți arată că dincolo de realitate se ascund adevăruri mai adânci decât ne putem imagina.
+                  </p>
+                </div>
               </div>
-              <div className="text-2xl font-bold text-paranormal-800">50+</div>
-              <div className="text-sm text-paranormal-600">Locuri Investigate</div>
-            </div>
-            
-            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
-              <div className="w-12 h-12 bg-mystery-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Video className="w-6 h-6 text-mystery-600" />
-              </div>
-              <div className="text-2xl font-bold text-paranormal-800">100+</div>
-              <div className="text-sm text-paranormal-600">LIVE-uri</div>
-            </div>
-            
-            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
-              <div className="w-12 h-12 bg-ghost-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Clock className="w-6 h-6 text-ghost-600" />
-              </div>
-              <div className="text-2xl font-bold text-paranormal-800">500+</div>
-              <div className="text-sm text-paranormal-600">Ore de Mistere</div>
-            </div>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            {/* LIVE Paranormal */}
-            <div className="card-paranormal p-8 text-center">
-              <div className="w-16 h-16 bg-mystery-600 rounded-xl flex items-center justify-center mx-auto mb-6 mystery-glow">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-paranormal-800 mb-4">LIVE Paranormal</h3>
-              <p className="text-paranormal-600 mb-6">
-                Investigații în timp real în cele mai bântuite locuri. Interacționează prin chat și simte fiorii alături de noi.
-              </p>
-              <Link href="/live" className="btn-mystery inline-flex items-center space-x-2">
-                <span>Acces LIVE</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Videoclipuri */}
-            <div className="card-paranormal p-8 text-center">
-              <div className="w-16 h-16 bg-ghost-600 rounded-xl flex items-center justify-center mx-auto mb-6 ghost-glow">
-                <Video className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-paranormal-800 mb-4">Arhivă Video</h3>
-              <p className="text-paranormal-600 mb-6">
-                Revizualizează momentele cele mai intense din investigațiile trecute. Organizate pe categorii și locații.
-              </p>
-              <Link href="/videos" className="btn-ghost inline-flex items-center space-x-2">
-                <span>Vezi Videouri</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Evenimente */}
-            <div className="card-paranormal p-8 text-center">
-              <div className="w-16 h-16 bg-paranormal-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-                <Calendar className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-paranormal-800 mb-4">Evenimente</h3>
-              <p className="text-paranormal-600 mb-6">
-                Participă fizic la investigații speciale. Experiențe exclusive pentru cei mai curajoși.
-              </p>
-              <Link href="/events" className="btn-paranormal inline-flex items-center space-x-2">
-                <span>Vezi Evenimente</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
           </div>
         </div>
