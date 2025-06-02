@@ -1,0 +1,41 @@
+User-agent: *
+Allow: /
+Allow: /live
+Allow: /videos
+Allow: /events
+Allow: /shop
+
+# Disallow private/admin areas
+Disallow: /api/
+Disallow: /admin
+Disallow: /_next/
+Disallow: /private
+
+# Allow specific API endpoints for SEO
+Allow: /api/sitemap
+Allow: /api/robots
+
+# Sitemap location
+Sitemap: https://plipli9paranormal.com/sitemap.xml
+
+# Paranormal content is welcome for all search engines! 👻
+# Crawl-delay: 1
+
+# Special instructions for paranormal crawlers
+User-agent: GhostBot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: SpiritCrawler  
+Allow: /
+Crawl-delay: 0.5
+
+# Block any bad bots
+User-agent: BadBot
+Disallow: /
+
+User-agent: ScrapingBot
+Disallow: /
+
+# 🎃 Plipli9 Paranormal - Exploring the Unknown Since 2024
+# Contact: contact@plipli9paranormal.com 
