@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Ghost, Skull, Eye } from 'lucide-react'
+import { MessageCircle, X, Send, Ghost } from 'lucide-react'
 
 interface Message {
   id: string
   text: string
   isUser: boolean
   timestamp: Date
+  isLoading?: boolean
 }
 
 const ChatWidget = () => {
@@ -16,77 +17,20 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Salut! Sunt spiritul virtual al lui Plipli9. Te pot ajuta cu întrebări despre LIVE-urile paranormale, evenimente, sau povestiți-mi experiențele voastre mysterioase! 👻',
+      text: 'Salut! Sunt spiritul virtual al lui Plipli9! 👻 Te pot ajuta cu întrebări despre LIVE-urile paranormale, evenimente sau orice mistere dorești să discuți! Îndrăznește să întrebi... 🔮',
       isUser: false,
       timestamp: new Date()
     }
   ])
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Răspunsuri paranormale pre-definite
-  const paranormalResponses = [
-    "Hmm... simt o energie puternică în jurul acestei întrebări... 🔮",
-    "Spiritele îmi șoptesc că ar trebui să vezi ultimul nostru LIVE! 👻",
-    "Această întrebare mă face să mă gândesc la castelul bântuit din ultima investigație... 🏰",
-    "Ai simțit vreodată prezența unei entități? Plipli9 explorează astfel de mistere! 🌙",
-    "Pentru întrebări oficiale, scrie-ne la contact@plipli9paranormal.com 📧",
-    "Următorul LIVE va fi EPIC! Ești gata pentru o experiență paranormală autentică? ⚡",
-    "Știai că unele spirite se manifestă mai tare noaptea? Plipli9 investighează doar atunci! 🌒",
-    "Această întrebare îmi dă fiori... exact ca locurile pe care le explorează Plipli9! ❄️"
-  ]
-
-  const easterEggResponses = [
-    "👻 *susur misterios* Cineva a spus 'Plipli9' de trei ori în oglindă?",
-    "🔮 Văd în bila de cristal... multe LIVE-uri paranormale în viitorul tău!",
-    "💀 Hmm, oasele de zombi îmi spun să-ți recomand să te abonezi!",
-    "👁️ Al treilea ochi îmi spune că ai potențial paranormal... interesant!",
-    "🌙 La următoarea lună plină, marile secrete vor fi dezvăluite în LIVE!"
-  ]
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const getRandomResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase()
-    
-    // Easter eggs pentru cuvinte speciale
-    if (lowerMessage.includes('fantom') || lowerMessage.includes('ghost')) {
-      return easterEggResponses[0]
-    }
-    if (lowerMessage.includes('viitor') || lowerMessage.includes('prezice')) {
-      return easterEggResponses[1]
-    }
-    if (lowerMessage.includes('moarte') || lowerMessage.includes('zombi')) {
-      return easterEggResponses[2]
-    }
-    if (lowerMessage.includes('pot') || lowerMessage.includes('talent')) {
-      return easterEggResponses[3]
-    }
-    if (lowerMessage.includes('când') || lowerMessage.includes('data')) {
-      return easterEggResponses[4]
-    }
-    
-    // FAQ responses
-    if (lowerMessage.includes('live') || lowerMessage.includes('pret') || lowerMessage.includes('cost')) {
-      return "LIVE-urile paranormale costă 25 RON și durează în medie 2-3 ore. Primești cod de acces după plată! 💳"
-    }
-    if (lowerMessage.includes('cum') || lowerMessage.includes('access')) {
-      return "După plată vei primi automat un cod de acces prin email. Introdu codul pe pagina LIVE! 🔑"
-    }
-    if (lowerMessage.includes('când') || lowerMessage.includes('program')) {
-      return "LIVE-urile se fac de obicei vinerea și sâmbăta seara. Urmărește anunțurile pentru data exactă! 📅"
-    }
-    if (lowerMessage.includes('locuri') || lowerMessage.includes('unde')) {
-      return "Plipli9 explorează castele, cimitire, case abandonate și alte locuri misterioase din România! 🏚️"
-    }
-    
-    // Răspuns random pentru alte întrebări
-    return paranormalResponses[Math.floor(Math.random() * paranormalResponses.length)]
-  }
-
-  const sendMessage = () => {
-    if (!message.trim()) return
+  const sendMessage = async () => {
+    if (!message.trim() || isLoading) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -96,17 +40,56 @@ const ChatWidget = () => {
     }
 
     setMessages(prev => [...prev, userMessage])
+    setIsLoading(true)
 
-    // Simulează răspuns automat după o mică întârziere
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: getRandomResponse(message),
-        isUser: false,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, botResponse])
-    }, 1000)
+    // Adaugă mesaj de loading
+    const loadingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      text: 'Spiritele îmi șoptesc răspunsul... 👻',
+      isUser: false,
+      timestamp: new Date(),
+      isLoading: true
+    }
+    setMessages(prev => [...prev, loadingMessage])
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      })
+
+      const data = await response.json()
+
+      // Elimină mesajul de loading și adaugă răspunsul real
+      setMessages(prev => {
+        const filtered = prev.filter(msg => !msg.isLoading)
+        return [...filtered, {
+          id: (Date.now() + 2).toString(),
+          text: data.message || 'Spiritele sunt prea puternice acum... încearcă din nou! 👻',
+          isUser: false,
+          timestamp: new Date()
+        }]
+      })
+
+    } catch (error) {
+      console.error('Chat error:', error)
+      
+      // Elimină mesajul de loading și adaugă mesaj de eroare
+      setMessages(prev => {
+        const filtered = prev.filter(msg => !msg.isLoading)
+        return [...filtered, {
+          id: (Date.now() + 3).toString(),
+          text: 'Conexiunea cu lumea spiritelor a fost întreruptă... 👻 Încearcă din nou în câteva momente! 🔮',
+          isUser: false,
+          timestamp: new Date()
+        }]
+      })
+    } finally {
+      setIsLoading(false)
+    }
 
     setMessage('')
   }
@@ -141,12 +124,15 @@ const ChatWidget = () => {
             {/* Header */}
             <div className="bg-paranormal-800 p-4 rounded-t-xl flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-mystery-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-mystery-600 rounded-full flex items-center justify-center mystery-glow">
                   <Ghost className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-medium text-sm">Spirit Asistent</h3>
-                  <p className="text-paranormal-300 text-xs">Online și misterios 👻</p>
+                  <h3 className="text-white font-medium text-sm">Spirit Asistent Plipli9</h3>
+                  <p className="text-paranormal-300 text-xs flex items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
+                    Online și misterios 👻
+                  </p>
                 </div>
               </div>
               <button
@@ -169,6 +155,8 @@ const ChatWidget = () => {
                     className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                       msg.isUser
                         ? 'bg-mystery-600 text-white rounded-br-none'
+                        : msg.isLoading
+                        ? 'bg-mystery-100 text-mystery-700 rounded-bl-none shadow-sm italic animate-pulse'
                         : 'bg-white text-paranormal-800 rounded-bl-none shadow-sm'
                     }`}
                   >
@@ -187,18 +175,26 @@ const ChatWidget = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Întreabă spiritul..."
-                  className="flex-1 px-3 py-2 border border-paranormal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 text-sm"
+                  disabled={isLoading}
+                  placeholder={isLoading ? "Spiritele lucrează..." : "Întreabă spiritul Plipli9..."}
+                  className="flex-1 px-3 py-2 border border-paranormal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!message.trim()}
+                  disabled={!message.trim() || isLoading}
                   className="w-10 h-10 bg-mystery-600 text-white rounded-lg hover:bg-mystery-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                   aria-label="Trimite mesaj"
                 >
-                  <Send size={16} />
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Send size={16} />
+                  )}
                 </button>
               </div>
+              <p className="text-xs text-paranormal-500 mt-2 text-center">
+                🔮 Conectat la spiritul AI al lui Plipli9
+              </p>
             </div>
           </div>
         )}
