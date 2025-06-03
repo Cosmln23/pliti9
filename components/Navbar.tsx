@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Ghost, Video, Calendar, ShoppingBag, Zap } from 'lucide-react'
-import LogoPlaceholder from './LogoPlaceholder'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -19,15 +18,13 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 paranormal-gradient shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo și nume site */}
-          <div className="flex items-center space-x-3">
-            <LogoPlaceholder />
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-white">
-                Plipli9 <span className="text-mystery-400">Paranormal</span>
-              </h1>
-            </div>
+        <div className="flex items-center justify-between h-16">
+          
+          {/* Nume site fără logo */}
+          <div className="flex items-center">
+            <Link href="/" className="text-xl font-bold text-white hover:text-mystery-400 transition-colors">
+              Plipli9 <span className="text-mystery-400">Paranormal</span>
+            </Link>
           </div>
 
           {/* Meniu desktop */}
