@@ -4,7 +4,7 @@ const nextConfig = {
     DEMO_MODE: 'false',
     NEXT_PUBLIC_DEMO_MODE: 'false',
     // Database Cloud - Railway PostgreSQL
-    DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
+    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
     
     // Make.com Webhooks (placeholder URLs - configurate în ZIUA 2)
     MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
