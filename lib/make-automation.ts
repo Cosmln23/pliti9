@@ -45,16 +45,14 @@ const WEBHOOKS = {
  */
 export async function triggerPaymentSuccessNotification(data: PaymentWebhookData): Promise<boolean> {
   try {
-    // În DEMO mode, doar loghează
-    if (process.env.DEMO_MODE === 'true') {
-      console.log('[DEMO] Payment Success Notification:', {
-        code: data.accessCode,
-        email: data.email,
-        phone: data.phoneNumber,
-        amount: data.amount
-      })
-      return true
-    }
+    // WEBHOOK REAL ACTIVAT - Se trimite către Make.com indiferent de DEMO_MODE
+    console.log('🚀 Sending webhook to Make.com:', {
+      code: data.accessCode,
+      email: data.email,
+      phone: data.phoneNumber,
+      amount: data.amount,
+      webhook_url: WEBHOOKS.payment_success
+    })
 
     if (!WEBHOOKS.payment_success) {
       console.warn('Make.com payment webhook URL not configured')
