@@ -1,16 +1,51 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    DEMO_MODE: 'false',
+    NEXT_PUBLIC_DEMO_MODE: 'false',
+    // Database Cloud - Railway PostgreSQL
+    DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
+    
+    // Make.com Webhooks (placeholder URLs - configurate în ZIUA 2)
+    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_payment',
+    MAKE_LIVE_STARTED_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_live_started',
+    MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
+    MAKE_WEBHOOK_SECRET: 'plipli9_paranormal_webhook_secret_2024',
+    
+    // Email & WhatsApp (placeholder keys - configurate în ZIUA 2)
+    SENDGRID_API_KEY: 'SG.placeholder_sendgrid_key',
+    SENDGRID_FROM_EMAIL: 'noreply@plipli9paranormal.com',
+    TWILIO_ACCOUNT_SID: 'ACplaceholder_twilio_sid',
+    TWILIO_AUTH_TOKEN: 'placeholder_twilio_token',
+    TWILIO_WHATSAPP_FROM: 'whatsapp:+14155238886',
+    
+    // Stripe (placeholder keys - configurate în ZIUA 2)
+    STRIPE_SECRET_KEY: 'sk_live_placeholder_stripe_secret',
+    STRIPE_WEBHOOK_SECRET: 'whsec_placeholder_stripe_webhook',
+    
+    // Site URLs
+    NEXT_PUBLIC_SITE_URL: 'https://www.plipli9.com',
+    NEXT_PUBLIC_API_URL: 'https://www.plipli9.com/api'
+  },
+  
   experimental: {
     // appDir este activat automat în Next.js 14, nu mai e nevoie să îl specificăm
+    serverComponentsExternalPackages: ['@planetscale/database']
   },
   
   // Optimizări pentru streaming video
   images: {
     domains: [
-      'livepeercdn.studio',
-      'vod-cdn.lp-playback.studio',
+      'cdn.sanity.io',
       'images.unsplash.com',
-      'cdn.plipli9paranormal.com'
+      'via.placeholder.com',
+      'lvpr.tv',
+      'livepeer.studio',
+      'images.unsplash.com',
+      'assets.aceternity.com',
+      'localhost',
+      'plipli9.com',
+      'www.plipli9.com'
     ],
     formats: ['image/webp', 'image/avif'],
   },
@@ -43,6 +78,15 @@ const nextConfig = {
     
     return config
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/health',
+        destination: '/api/health'
+      }
+    ]
+  }
 }
 
 module.exports = nextConfig 
