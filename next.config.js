@@ -7,7 +7,7 @@ const nextConfig = {
     DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
     
     // Make.com Webhooks (placeholder URLs - configurate în ZIUA 2)
-    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_payment',
+    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
     MAKE_LIVE_STARTED_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_live_started',
     MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
     MAKE_WEBHOOK_SECRET: 'plipli9_paranormal_webhook_secret_2024',
