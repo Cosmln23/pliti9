@@ -81,7 +81,7 @@ export async function createAccessCode(data: Omit<AccessCode, 'id' | 'created_at
   )
   
   return {
-    id: result.insertId as number,
+    id: Number(result.insertId),
     ...data,
     created_at: new Date()
   }
@@ -196,7 +196,7 @@ export async function createLiveSession(data: Omit<LiveSession, 'id' | 'started_
   )
   
   return {
-    id: result.insertId as number,
+    id: Number(result.insertId),
     ...data,
     started_at: new Date()
   }
@@ -271,7 +271,7 @@ export async function saveChatMessage(data: Omit<ChatMessage, 'id' | 'timestamp'
   )
   
   return {
-    id: result.insertId as number,
+    id: Number(result.insertId),
     ...data,
     timestamp: new Date()
   }

@@ -12,8 +12,11 @@ const nextConfig = {
     MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
     MAKE_WEBHOOK_SECRET: 'plipli9_paranormal_webhook_secret_2024',
     
+    // OpenAI ChatGPT pentru chat widget
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'sk-placeholder-openai-key-here',
+    
     // Email & WhatsApp - REAL KEYS
-    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || 'your_sendgrid_api_key_here',
+    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || 'SG-placeholder-sendgrid-key-here',
     SENDGRID_FROM_EMAIL: 'noreply@plipli9paranormal.com',
     TWILIO_ACCOUNT_SID: 'ACplaceholder_twilio_sid',
     TWILIO_AUTH_TOKEN: 'placeholder_twilio_token',
