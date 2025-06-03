@@ -107,8 +107,23 @@ export async function sendEmail(to: string, subject: string, htmlContent: string
   }
 }
 
-// Livepeer Functions
+// Livepeer Functions - TEMPORAR DISABLED până la API key
 export async function createLivepeerStream(name?: string) {
+  // TODO: Uncomment when Livepeer API key is provided
+  console.warn('Livepeer API not configured yet')
+  
+  // Mock response pentru acum
+  const mockStreamKey = `plipli9_${Date.now()}`
+  const mockPlaybackId = `plb_${Math.random().toString(36).substr(2, 9)}`
+  
+  return {
+    streamKey: mockStreamKey,
+    playbackId: mockPlaybackId,
+    rtmpUrl: `rtmp://rtmp.livepeer.com/live/${mockStreamKey}`,
+    playbackUrl: `https://lvpr.tv?v=${mockPlaybackId}`
+  }
+  
+  /*
   try {
     const stream = await livepeer.stream.create({
       name: name || `Plipli9-Live-${Date.now()}`,
@@ -129,9 +144,15 @@ export async function createLivepeerStream(name?: string) {
     console.error('Livepeer stream creation error:', error)
     throw error
   }
+  */
 }
 
 export async function getLivepeerStreamStatus(streamId: string) {
+  // TODO: Uncomment when Livepeer API key is provided
+  console.warn('Livepeer API not configured yet')
+  return { status: 'mock', id: streamId }
+  
+  /*
   try {
     const stream = await livepeer.stream.get(streamId)
     return stream
@@ -139,6 +160,7 @@ export async function getLivepeerStreamStatus(streamId: string) {
     console.error(`Livepeer stream status error for ${streamId}:`, error)
     throw error
   }
+  */
 }
 
 // Template Functions
