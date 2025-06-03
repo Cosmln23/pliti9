@@ -1,8 +1,0 @@
-{
-  "email": "test@plipli9paranormal.com",
-  "phone_number": "+40712345678",
-  "amount": 25,
-  "paymentMethod": "stripe",
-  "paymentIntentId": "pi_test_123456",
-  "sessionId": "session_test_123"
-} 
