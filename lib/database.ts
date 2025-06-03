@@ -1,17 +1,14 @@
-import { connect } from '@planetscale/database'
+import { Pool } from 'pg'
 
 const config = {
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
-  url: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL
 }
 
 // Demo mode check
 const isDemoMode = process.env.DEMO_MODE === 'true'
 
 // Conditional database connection
-const conn = isDemoMode ? null : connect(config)
+const pool = isDemoMode ? null : new Pool(config)
 
 // Demo data storage (in-memory for development)
 const demoStorage = {
@@ -74,17 +71,13 @@ export async function createAccessCode(data: Omit<AccessCode, 'id' | 'created_at
     return accessCode
   }
 
-  const result = await conn!.execute(
+  const result = await pool!.query(
     `INSERT INTO access_codes (code, email, phone_number, payment_intent_id, amount, payment_method, expires_at, status, usage_count, ip_address) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
     [data.code, data.email, data.phone_number, data.payment_intent_id, data.amount, data.payment_method, data.expires_at, data.status, data.usage_count, data.ip_address]
   )
   
-  return {
-    id: Number(result.insertId),
-    ...data,
-    created_at: new Date()
-  }
+  return result.rows[0] as AccessCode
 }
 
 export async function getAccessCodeByCode(code: string): Promise<AccessCode | null> {
@@ -94,8 +87,8 @@ export async function getAccessCodeByCode(code: string): Promise<AccessCode | nu
     return found || null
   }
 
-  const result = await conn!.execute(
-    'SELECT * FROM access_codes WHERE code = ? LIMIT 1',
+  const result = await pool!.query(
+    'SELECT * FROM access_codes WHERE code = $1 LIMIT 1',
     [code]
   )
   
@@ -114,8 +107,8 @@ export async function updateAccessCodeUsage(code: string, ip_address?: string): 
     return
   }
 
-  await conn!.execute(
-    'UPDATE access_codes SET last_used_at = NOW(), usage_count = usage_count + 1, ip_address = ? WHERE code = ?',
+  await pool!.query(
+    'UPDATE access_codes SET last_used_at = NOW(), usage_count = usage_count + 1, ip_address = $1 WHERE code = $2',
     [ip_address, code]
   )
 }
@@ -131,7 +124,7 @@ export async function getActiveAccessCodes(): Promise<AccessCode[]> {
     return active
   }
 
-  const result = await conn!.execute(
+  const result = await pool!.query(
     'SELECT * FROM access_codes WHERE status = "active" AND expires_at > NOW()'
   )
   
@@ -152,8 +145,8 @@ export async function getExpiringAccessCodes(hoursFromNow: number = 2): Promise<
     return expiring
   }
 
-  const result = await conn!.execute(
-    'SELECT * FROM access_codes WHERE status = "active" AND expires_at > NOW() AND expires_at <= DATE_ADD(NOW(), INTERVAL ? HOUR)',
+  const result = await pool!.query(
+    'SELECT * FROM access_codes WHERE status = "active" AND expires_at > NOW() AND expires_at <= DATE_ADD(NOW(), INTERVAL $1 HOUR)',
     [hoursFromNow]
   )
   
@@ -170,8 +163,8 @@ export async function expireAccessCode(code: string): Promise<void> {
     return
   }
 
-  await conn!.execute(
-    'UPDATE access_codes SET status = "expired" WHERE code = ?',
+  await pool!.query(
+    'UPDATE access_codes SET status = "expired" WHERE code = $1',
     [code]
   )
 }
@@ -189,17 +182,13 @@ export async function createLiveSession(data: Omit<LiveSession, 'id' | 'started_
     return liveSession
   }
 
-  const result = await conn!.execute(
+  const result = await pool!.query(
     `INSERT INTO live_sessions (session_id, stream_key, stream_url, playback_url, location, status, estimated_duration, viewer_count, stream_source) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
     [data.session_id, data.stream_key, data.stream_url, data.playback_url, data.location, data.status, data.estimated_duration, data.viewer_count, data.stream_source]
   )
   
-  return {
-    id: Number(result.insertId),
-    ...data,
-    started_at: new Date()
-  }
+  return result.rows[0] as LiveSession
 }
 
 export async function getCurrentLiveSession(): Promise<LiveSession | null> {
@@ -212,7 +201,7 @@ export async function getCurrentLiveSession(): Promise<LiveSession | null> {
     return active || null
   }
 
-  const result = await conn!.execute(
+  const result = await pool!.query(
     'SELECT * FROM live_sessions WHERE status = "active" ORDER BY started_at DESC LIMIT 1'
   )
   
@@ -230,8 +219,8 @@ export async function endLiveSession(sessionId: string): Promise<void> {
     return
   }
 
-  await conn!.execute(
-    'UPDATE live_sessions SET status = "ended", ended_at = NOW() WHERE session_id = ?',
+  await pool!.query(
+    'UPDATE live_sessions SET status = "ended", ended_at = NOW() WHERE session_id = $1',
     [sessionId]
   )
 }
@@ -246,8 +235,8 @@ export async function updateViewerCount(sessionId: string, count: number): Promi
     return
   }
 
-  await conn!.execute(
-    'UPDATE live_sessions SET viewer_count = ? WHERE session_id = ?',
+  await pool!.query(
+    'UPDATE live_sessions SET viewer_count = $1 WHERE session_id = $2',
     [count, sessionId]
   )
 }
@@ -265,16 +254,12 @@ export async function saveChatMessage(data: Omit<ChatMessage, 'id' | 'timestamp'
     return chatMessage
   }
 
-  const result = await conn!.execute(
-    'INSERT INTO chat_messages (session_id, username, message, ip_address) VALUES (?, ?, ?, ?)',
+  const result = await pool!.query(
+    'INSERT INTO chat_messages (session_id, username, message, ip_address) VALUES ($1, $2, $3, $4) RETURNING *',
     [data.session_id, data.username, data.message, data.ip_address]
   )
   
-  return {
-    id: Number(result.insertId),
-    ...data,
-    timestamp: new Date()
-  }
+  return result.rows[0] as ChatMessage
 }
 
 export async function getChatMessages(sessionId: string, limit: number = 50): Promise<ChatMessage[]> {
@@ -289,8 +274,8 @@ export async function getChatMessages(sessionId: string, limit: number = 50): Pr
     return messages
   }
 
-  const result = await conn!.execute(
-    'SELECT * FROM chat_messages WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?',
+  const result = await pool!.query(
+    'SELECT * FROM chat_messages WHERE session_id = $1 ORDER BY timestamp DESC LIMIT $2',
     [sessionId, limit]
   )
   
