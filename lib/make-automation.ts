@@ -59,29 +59,16 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
       return false
     }
 
-    // Pregătire payload pentru Make.com
+    // Pregătire payload pentru Make.com - format simplu pentru variabilele {{1.variabila}}
     const payload = {
-      event_type: 'payment_success',
-      timestamp: data.timestamp,
-      access_code: {
-        code: data.accessCode,
-        expires_at: data.expiresAt,
-        live_url: data.liveUrl
-      },
-      customer: {
-        email: data.email,
-        phone_number: data.phoneNumber
-      },
-      payment: {
-        amount: data.amount,
-        method: data.paymentMethod,
-        currency: 'RON'
-      },
-      notifications: {
-        send_email: true,
-        send_whatsapp: !!data.phoneNumber,
-        template_type: 'access_code_delivery'
-      }
+      email: data.email,
+      accessCode: data.accessCode,
+      expiresAt: data.expiresAt,
+      liveUrl: data.liveUrl,
+      phoneNumber: data.phoneNumber,
+      amount: data.amount,
+      paymentMethod: data.paymentMethod,
+      timestamp: data.timestamp
     }
 
     // Trimite la Make.com
