@@ -71,6 +71,9 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
       timestamp: data.timestamp
     }
 
+    console.log('📨 PAYLOAD SENT TO MAKE.COM:', JSON.stringify(payload, null, 2))
+    console.log('📧 Email value specifically:', payload.email)
+
     // Trimite la Make.com
     const response = await axios.post(WEBHOOKS.payment_success, payload, {
       headers: {
