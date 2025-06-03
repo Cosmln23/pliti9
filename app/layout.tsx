@@ -4,6 +4,7 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ChatWidget from '@/components/ChatWidget'
+import { getSiteSettings, urlFor } from '@/lib/sanity'
 
 export const metadata: Metadata = {
   title: 'Plipli9 Paranormal - Mistere Reale, Locuri Bântuite',
@@ -45,11 +46,16 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Preluăm setările pentru navbar
+  const siteSettings = await getSiteSettings()
+  const logoUrl = siteSettings?.branding?.logo ? urlFor(siteSettings.branding.logo)?.width(40).height(40).url() : undefined
+  const siteName = siteSettings?.branding?.siteName || 'Plipli9 Paranormal'
+
   return (
     <html lang="ro" suppressHydrationWarning>
       <head>
@@ -90,7 +96,7 @@ export default function RootLayout({
         {/* Layout principal cu navbar fix sus */}
         <div className="flex flex-col min-h-screen">
           {/* Navbar fix în partea de sus */}
-          <Navbar />
+          <Navbar logoUrl={logoUrl} siteName={siteName} />
           
           {/* Conținutul principal cu padding pentru navbar */}
           <main className="flex-1 pt-16">

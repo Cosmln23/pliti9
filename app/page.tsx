@@ -105,25 +105,7 @@ async function HomePage() {
         
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="space-y-8">
-            {/* Logo principal din Sanity - centrat și deasupra textului */}
-            <div className="flex justify-center mb-6">
-              {branding?.logo && (
-                <div className="w-32 h-32 rounded-xl flex items-center justify-center mystery-glow overflow-hidden">
-                  <img 
-                    src={urlFor(branding.logo)?.width(128).height(128).url() || ''} 
-                    alt={branding.siteName || 'Plipli9 Paranormal Logo'}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              {!branding?.logo && (
-                <div className="w-32 h-32 bg-mystery-600 rounded-xl flex items-center justify-center mystery-glow">
-                  <Ghost className="w-16 h-16 text-white" />
-                </div>
-              )}
-            </div>
-
-            {/* Titlul principal fără logo lângă */}
+            {/* Titlul principal - fără logo */}
             <div className="mb-8">
               <h1 className="text-5xl md:text-7xl font-bold">
                 {heroSection?.title || branding?.siteName || 'Plipli9'} <span className="text-mystery-400 text-glow">Paranormal</span>

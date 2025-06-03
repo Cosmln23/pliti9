@@ -4,7 +4,12 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Ghost, Video, Calendar, ShoppingBag, Zap } from 'lucide-react'
 
-const Navbar = () => {
+interface NavbarProps {
+  logoUrl?: string
+  siteName?: string
+}
+
+const Navbar: React.FC<NavbarProps> = ({ logoUrl, siteName = 'Plipli9 Paranormal' }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const menuItems = [
@@ -20,10 +25,27 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Nume site fără logo */}
-          <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-white hover:text-mystery-400 transition-colors">
-              Plipli9 <span className="text-mystery-400">Paranormal</span>
+          {/* Logo și nume site */}
+          <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+              {logoUrl ? (
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mystery-glow overflow-hidden">
+                  <img 
+                    src={logoUrl}
+                    alt={siteName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-mystery-600 rounded-lg flex items-center justify-center mystery-glow">
+                  <Ghost className="w-6 h-6 text-white" />
+                </div>
+              )}
+              <div className="hidden sm:block">
+                <span className="text-xl font-bold text-white">
+                  Plipli9 <span className="text-mystery-400">Paranormal</span>
+                </span>
+              </div>
             </Link>
           </div>
 
