@@ -34,7 +34,7 @@ export interface ReminderWebhookData {
 
 // Make.com Webhook URLs (configurate în environment)
 const WEBHOOKS = {
-  payment_success: process.env.MAKE_PAYMENT_WEBHOOK_URL,
+  payment_success: process.env.MAKE_PAYMENT_WEBHOOK_URL || 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
   live_started: process.env.MAKE_LIVE_STARTED_WEBHOOK_URL,
   reminder_2h: process.env.MAKE_REMINDER_WEBHOOK_URL,
   live_ended: process.env.MAKE_LIVE_ENDED_WEBHOOK_URL
