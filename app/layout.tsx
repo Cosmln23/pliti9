@@ -104,7 +104,7 @@ export default async function RootLayout({
           </main>
           
           {/* Footer */}
-          <Footer />
+          <Footer siteSettings={siteSettings} />
         </div>
         
         {/* Chat Widget fix jos-stânga pe toate paginile */}

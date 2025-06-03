@@ -2,26 +2,32 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Ghost, Heart, Mail, MapPin, Phone } from 'lucide-react'
+import { Heart, Mail, MapPin } from 'lucide-react'
 
-const Footer = () => {
+interface FooterProps {
+  siteSettings?: any
+}
+
+const Footer: React.FC<FooterProps> = ({ siteSettings }) => {
   const currentYear = new Date().getFullYear()
+  
+  // Preluăm datele de contact din Sanity
+  const contact = siteSettings?.contact || {}
+  const email = contact.email || 'contact@plipli9paranormal.com'
+  const instagram = contact.instagram || 'plipli9paranormal'
+  const tiktok = contact.tiktok || 'plipli9paranormal'
+  const youtube = contact.youtube || 'plipli9paranormal'
 
   return (
     <footer className="bg-paranormal-900 text-paranormal-100 pt-12 pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
-          {/* Logo și descriere */}
+          {/* Descriere fără logo */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-mystery-600 rounded-lg flex items-center justify-center mystery-glow">
-                <Ghost className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white">
-                Plipli9 <span className="text-mystery-400">Paranormal</span>
-              </h3>
-            </div>
+            <h3 className="text-xl font-bold text-white mb-4">
+              Plipli9 <span className="text-mystery-400">Paranormal</span>
+            </h3>
             <p className="text-paranormal-300 mb-4 leading-relaxed">
               Mistere reale, locuri bântuite, LIVE-uri autentice! Alătură-te comunității celor mai curajoși exploratori ai paranormalului din România.
             </p>
@@ -63,22 +69,22 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact & Social */}
+          {/* Contact & Social cu datele din Sanity */}
           <div>
             <h4 className="font-semibold text-white mb-4">Conectează-te</h4>
             <div className="space-y-3">
               <a 
-                href="mailto:contact@plipli9paranormal.com" 
+                href={`mailto:${email}`} 
                 className="flex items-center space-x-2 text-paranormal-300 hover:text-mystery-400 transition-colors text-sm"
               >
                 <Mail size={16} />
-                <span>contact@plipli9paranormal.com</span>
+                <span>{email}</span>
               </a>
               
-              {/* Social Media Links */}
+              {/* Social Media Links cu datele din Sanity */}
               <div className="flex space-x-3 pt-2">
                 <a 
-                  href="https://tiktok.com/@plipli9paranormal" 
+                  href={`https://tiktok.com/@${tiktok}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
@@ -87,7 +93,7 @@ const Footer = () => {
                   <span className="text-xs font-bold">TT</span>
                 </a>
                 <a 
-                  href="https://instagram.com/plipli9paranormal" 
+                  href={`https://instagram.com/${instagram}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
@@ -96,7 +102,7 @@ const Footer = () => {
                   <span className="text-xs font-bold">IG</span>
                 </a>
                 <a 
-                  href="https://youtube.com/@plipli9paranormal" 
+                  href={`https://youtube.com/@${youtube}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-paranormal-800 rounded-lg flex items-center justify-center hover:bg-mystery-600 transition-colors"
