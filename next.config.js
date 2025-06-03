@@ -3,10 +3,10 @@ const nextConfig = {
   env: {
     DEMO_MODE: 'false',
     NEXT_PUBLIC_DEMO_MODE: 'false',
-    // Database Cloud - Railway PostgreSQL
-    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
+    // Database Cloud - Railway PostgreSQL - HARDCODED
+    DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
     
-    // Make.com Webhooks (placeholder URLs - configurate în ZIUA 2)
+    // Make.com Webhooks - HARDCODED
     MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
     MAKE_LIVE_STARTED_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_live_started',
     MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
