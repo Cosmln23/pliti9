@@ -82,29 +82,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
       // Generează payment intent ID simulat
       const simulatedPaymentIntentId = `pi_${Math.random().toString(36).substr(2, 12)}`
       
-      // DEMO MODE - generăm cod local în loc să apelăm API-ul
-      const simulatedAccessCode = `PLI${Math.random().toString(36).substr(2, 6).toUpperCase()}`
-      
-      // Simulăm răspuns de succes
-      const simulatedResponse = {
-        success: true,
-        data: {
-          accessCode: simulatedAccessCode,
-          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-          email: formData.email.trim().toLowerCase()
-        }
-      }
-
-      console.log('DEMO: Payment processed successfully:', simulatedResponse)
-      
-      setSuccess(true)
-      
-      // Trigger success callback cu codul de acces generat
-      setTimeout(() => {
-        onPaymentSuccess(simulatedResponse.data.accessCode)
-      }, 1500)
-
-      /* REAL API CALL - disabled pentru demo
       // Apelează API-ul nostru pentru crearea codului de acces
       const response = await fetch('/api/access-codes/create', {
         method: 'POST',
@@ -139,7 +116,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
       } else {
         throw new Error(data.message || data.error || 'Eroare la procesarea plății')
       }
-      */
 
     } catch (error) {
       console.error('Payment failed:', error)
