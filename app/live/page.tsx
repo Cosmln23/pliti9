@@ -101,7 +101,7 @@ const LivePage = () => {
   // Twitch Live override pentru demo
   const DEMO_TWITCH_LIVE = {
     enabled: true,
-    channel: 'plipliparanormal', // ÎNLOCUIEȘTE cu username-ul tău Twitch exact
+    channel: 'plipli9', // Username-ul exact de pe Twitch
     title: 'PLIPLI9 PARANORMAL - Twitch Live'
   }
 
