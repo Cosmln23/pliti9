@@ -414,8 +414,20 @@ const LivePage = () => {
       // Dezactivează YouTube dacă era activ
       setIsYouTubeLive(false)
       setYoutubeVideoId('')
+      
+      // Forțează status-ul ca fiind LIVE pentru demo
+      console.log('🔴 DEMO: Twitch Live activated for @' + DEMO_TWITCH_LIVE.channel)
     }
   }, [hasAccess])
+
+  // DEMO: Forțează live status când user-ul are acces
+  useEffect(() => {
+    if (hasAccess && DEMO_TWITCH_LIVE.enabled) {
+      setIsLive(true)
+      setIsTwitchLive(true)
+      setTwitchChannel(DEMO_TWITCH_LIVE.channel)
+    }
+  }, [hasAccess, userAccessCode])
 
   // Nu renderiza timpurile dinamice până nu e mounted
   if (!mounted) {
@@ -634,15 +646,15 @@ const LivePage = () => {
         
         {/* Video Player - ocupă majoritatea spațiului */}
         <div className="flex-1 flex items-center justify-center bg-black">
-          {isLive && (liveSession || isYouTubeLive || isTwitchLive) ? (
+          {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
             <VideoPlayer 
               playbackId={liveSession?.playback_id} 
               isLive={true}
               playbackUrl={liveSession?.playback_url}
               isYouTubeLive={isYouTubeLive}
               youtubeVideoId={youtubeVideoId}
-              isTwitchLive={isTwitchLive}
-              twitchChannel={twitchChannel}
+              isTwitchLive={isTwitchLive || (hasAccess && DEMO_TWITCH_LIVE.enabled)}
+              twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
             />
           ) : (
             <div className="text-center text-white p-12">
