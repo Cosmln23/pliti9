@@ -28,8 +28,21 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [username, setUsername] = useState('')
   const [isUsernameSet, setIsUsernameSet] = useState(isStreamerView)
   const [isConnected, setIsConnected] = useState(true)
+  const [showEmojis, setShowEmojis] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
+
+  // Paranormal themed emoticons
+  const paranormalEmojis = [
+    '👻', '💀', '🔮', '🕯️', '🌙', '⚡', '🦇', '🕷️', 
+    '🔱', '💜', '🖤', '☠️', '⚰️', '🌟', '✨', '🌌',
+    '🕯️', '🔥', '❄️', '💎', '🗝️', '📿', '🔐', '⚗️'
+  ]
+
+  const addEmoji = (emoji: string) => {
+    setNewMessage(prev => prev + emoji)
+    setShowEmojis(false)
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -215,6 +228,27 @@ const LiveChat: React.FC<LiveChatProps> = ({
 
       {/* Message Input */}
       <div className="p-4 border-t border-gray-700">
+        {/* Emoji Selector */}
+        {showEmojis && (
+          <div className="mb-3 p-3 bg-gray-800 border border-gray-600 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-purple-400 text-sm font-medium">Emoticonuri Paranormale:</span>
+            </div>
+            <div className="grid grid-cols-8 gap-2">
+              {paranormalEmojis.map((emoji, index) => (
+                <button
+                  key={index}
+                  onClick={() => addEmoji(emoji)}
+                  className="text-xl hover:bg-purple-600/20 p-1 rounded transition-colors"
+                  title={`Adaugă ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="flex space-x-2">
           <input
             type="text"
@@ -226,6 +260,13 @@ const LiveChat: React.FC<LiveChatProps> = ({
             maxLength={200}
             disabled={!isConnected}
           />
+          <button
+            onClick={() => setShowEmojis(!showEmojis)}
+            className="bg-gray-700 hover:bg-gray-600 text-purple-400 p-2 rounded-lg transition-colors"
+            title="Emoticonuri Paranormale"
+          >
+            👻
+          </button>
           <button
             onClick={sendMessage}
             disabled={!newMessage.trim() || !isConnected}

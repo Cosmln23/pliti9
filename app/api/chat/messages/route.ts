@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMessages } from '@/lib/chat-storage'
 
-// Same in-memory storage as send endpoint
-const chatMessages: any[] = []
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
