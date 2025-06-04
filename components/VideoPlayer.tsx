@@ -65,16 +65,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Simulează verificarea conexiunii pentru LIVE
   useEffect(() => {
     if (isLive || isYouTubeLive || isTwitchLive) {
+      // REMOVED: Error simulation - keep connection always stable for live streaming
+      // Video player MUST be 100% reliable during live streams
+      setConnectionStatus('connected')
+      setError(null)
+      
+      // Optional: Real connection check (without fake errors)
       const checkConnection = setInterval(() => {
-        // În aplicația reală, aici ar fi verificarea statusului stream-ului
-        const isConnected = Math.random() > 0.05 // 95% chance of connection
-        setConnectionStatus(isConnected ? 'connected' : 'error')
-        if (!isConnected) {
-          setError('Conexiunea la LIVE s-a întrerupt temporar')
-        } else {
+        // Only check if iframe/video is actually loaded
+        // For Twitch embeds, assume always connected since Twitch handles this
+        if (isTwitchLive || isYouTubeLive) {
+          setConnectionStatus('connected')
           setError(null)
         }
-      }, 15000) // Verifică la 15 secunde
+      }, 30000) // Check every 30 seconds only
 
       return () => clearInterval(checkConnection)
     }

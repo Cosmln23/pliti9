@@ -1,45 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { addMessage } from '@/lib/chat-storage'
 
-// Import the same chatRooms storage (in production, use Redis or database)
-const chatRooms = new Map<string, Array<{
-  id: string
-  username: string
-  message: string
-  timestamp: string
-  type: 'user' | 'system' | 'admin'
-  likes?: number
-}>>()
+// In-memory storage for demo - in production use database
+const chatMessages: any[] = []
+let messageIdCounter = 1
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { streamId, username, message, isStreamer } = body
+    const { streamId, username, message, isStreamer } = await request.json()
 
     if (!streamId || !username || !message) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    // Initialize chat room if it doesn't exist
-    if (!chatRooms.has(streamId)) {
-      chatRooms.set(streamId, [])
-    }
-
-    const newMessage = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    // Create new message using shared storage
+    const newMessage = addMessage({
+      streamId,
       username,
       message: message.trim(),
       timestamp: new Date().toISOString(),
-      type: isStreamer ? 'admin' as const : 'user' as const,
+      type: isStreamer ? 'admin' : 'user',
       likes: 0
+    })
+
+    // Keep only last 100 messages per stream
+    const streamMessages = chatMessages.filter(m => m.streamId === streamId)
+    if (streamMessages.length > 100) {
+      const excessCount = streamMessages.length - 100
+      for (let i = 0; i < excessCount; i++) {
+        const index = chatMessages.findIndex(m => m.streamId === streamId)
+        if (index !== -1) {
+          chatMessages.splice(index, 1)
+        }
+      }
     }
 
-    const roomMessages = chatRooms.get(streamId)!
-    roomMessages.push(newMessage)
-
-    // Keep only last 100 messages per room
-    if (roomMessages.length > 100) {
-      chatRooms.set(streamId, roomMessages.slice(-100))
-    }
+    console.log(`💬 Chat message sent: ${username}: ${message}`)
 
     return NextResponse.json({ 
       success: true, 
@@ -47,7 +46,13 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error sending message:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error sending chat message:', error)
+    return NextResponse.json(
+      { error: 'Failed to send message' },
+      { status: 500 }
+    )
   }
-} 
+}
+
+// Disable static optimization for this API route
+export const dynamic = 'force-dynamic' 

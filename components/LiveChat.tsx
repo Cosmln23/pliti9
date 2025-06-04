@@ -20,14 +20,14 @@ interface LiveChatProps {
 
 const LiveChat: React.FC<LiveChatProps> = ({ 
   isStreamerView = false, 
-  streamId,
+  streamId = 'plipli9-paranormal-live',
   viewerCount = 0 
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [username, setUsername] = useState('')
+  const [isUsernameSet, setIsUsernameSet] = useState(isStreamerView)
   const [isConnected, setIsConnected] = useState(true)
-  const [isUsernameSet, setIsUsernameSet] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
 
@@ -40,10 +40,9 @@ const LiveChat: React.FC<LiveChatProps> = ({
   }, [messages])
 
   useEffect(() => {
-    // Generate random anonymous username if not set
-    if (!username) {
+    if (!isStreamerView && !username) {
       const anonymousNames = [
-        'Investigator', 'Seeker', 'Observer', 'Witness', 'Explorer',
+        'Ghost', 'Spirit', 'Shadow', 'Mystery', 'Phantom', 'Seeker', 'Explorer',
         'Hunter', 'Believer', 'Curious', 'Watcher', 'Guest'
       ]
       const randomName = anonymousNames[Math.floor(Math.random() * anonymousNames.length)]
@@ -63,7 +62,11 @@ const LiveChat: React.FC<LiveChatProps> = ({
           const data = await response.json()
           if (data.messages) {
             setMessages(data.messages)
+            setIsConnected(true)
           }
+        } else {
+          console.error('Failed to fetch messages:', response.status)
+          setIsConnected(false)
         }
       } catch (error) {
         console.error('Error polling messages:', error)
@@ -71,8 +74,8 @@ const LiveChat: React.FC<LiveChatProps> = ({
       }
     }
 
-    // Poll every 2 seconds
-    pollInterval.current = setInterval(pollMessages, 2000)
+    // Poll every 3 seconds (reduced from 2 seconds)
+    pollInterval.current = setInterval(pollMessages, 3000)
     pollMessages() // Initial load
 
     return () => {
