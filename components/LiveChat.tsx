@@ -29,6 +29,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [isUsernameSet, setIsUsernameSet] = useState(isStreamerView)
   const [isConnected, setIsConnected] = useState(true)
   const [showEmojis, setShowEmojis] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -71,19 +72,36 @@ const LiveChat: React.FC<LiveChatProps> = ({
     // Start polling for messages
     const pollMessages = async () => {
       try {
-        const response = await fetch(`/api/chat/messages?streamId=${streamId}`)
+        const response = await fetch(`/api/chat/messages?streamId=${streamId}&t=${Date.now()}`) // Cache busting for mobile
         if (response.ok) {
           const data = await response.json()
           if (data.messages) {
-            setMessages(data.messages)
+            // Filter out temporary optimistic messages when real messages arrive
+            setMessages(prevMessages => {
+              const realMessages = data.messages
+              const tempMessages = prevMessages.filter(m => m.id.startsWith('temp-'))
+              
+              // Remove temp messages that have been replaced by real ones
+              const filteredTempMessages = tempMessages.filter(temp => 
+                !realMessages.some((real: ChatMessage) => 
+                  real.username === temp.username && 
+                  real.message === temp.message &&
+                  Math.abs(new Date(real.timestamp).getTime() - new Date(temp.timestamp).getTime()) < 10000
+                )
+              )
+              
+              return [...realMessages, ...filteredTempMessages]
+            })
             setIsConnected(true)
+            
+            console.log(`📱 Mobile chat poll: ${data.messages.length} messages loaded`)
           }
         } else {
           console.error('Failed to fetch messages:', response.status)
           setIsConnected(false)
         }
       } catch (error) {
-        console.error('Error polling messages:', error)
+        console.error('❌ Mobile polling error:', error)
         setIsConnected(false)
       }
     }
@@ -100,7 +118,23 @@ const LiveChat: React.FC<LiveChatProps> = ({
   }, [streamId, isUsernameSet])
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !streamId) return
+    if (!newMessage.trim() || !streamId || isSending) return
+
+    setIsSending(true)
+    const messageToSend = newMessage.trim()
+    
+    // Optimistically add message to UI (mobile improvement)
+    const optimisticMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      username,
+      message: messageToSend,
+      timestamp: new Date().toISOString(),
+      type: isStreamerView ? 'admin' : 'user',
+      likes: 0
+    }
+    
+    setMessages(prev => [...prev, optimisticMessage])
+    setNewMessage('')
 
     try {
       const response = await fetch('/api/chat/send', {
@@ -111,19 +145,36 @@ const LiveChat: React.FC<LiveChatProps> = ({
         body: JSON.stringify({
           streamId,
           username,
-          message: newMessage.trim(),
+          message: messageToSend,
           isStreamer: isStreamerView
         })
       })
 
-      if (response.ok) {
-        setNewMessage('')
-        // Message will appear through polling
-      } else {
-        console.error('Failed to send message')
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
       }
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send message')
+      }
+
+      console.log('✅ Message sent successfully on mobile:', result)
+      setIsConnected(true)
+      
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('❌ Mobile chat error:', error)
+      setIsConnected(false)
+      
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
+      setNewMessage(messageToSend) // Restore message
+      
+      // Show user-friendly error
+      alert('Mesajul nu a putut fi trimis. Verifică conexiunea și încearcă din nou.')
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -270,13 +321,14 @@ const LiveChat: React.FC<LiveChatProps> = ({
           
           <button
             onClick={sendMessage}
-            disabled={!newMessage.trim() || !isConnected}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex-shrink-0"
+            disabled={!newMessage.trim() || isSending}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex-shrink-0 touch-manipulation"
+            style={{ minHeight: '44px', minWidth: '44px' }}
           >
-            {isConnected ? (
-              <Send className="w-4 h-4" />
-            ) : (
+            {isSending ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Send className="w-4 h-4" />
             )}
           </button>
         </div>

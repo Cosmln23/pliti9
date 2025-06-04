@@ -179,6 +179,49 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             }}
           ></iframe>
           
+          {/* Stream Ended Overlay - appears when stream goes offline */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/95 via-black/90 to-gray-900/95 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+            <div className="text-center p-8 max-w-md">
+              {/* Paranormal decoration */}
+              <div className="relative mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                  <span className="text-3xl">👻</span>
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-ping"></div>
+                <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-purple-400 rounded-full animate-bounce"></div>
+              </div>
+              
+              {/* Thank you message */}
+              <h2 className="text-2xl font-bold text-white mb-3 tracking-wide">
+                🌟 PLIPLI9 VĂ MULȚUMEȘTE! 🌟
+              </h2>
+              <p className="text-purple-300 text-lg mb-4 font-medium">
+                pentru vizionarea investigației paranormale
+              </p>
+              <div className="space-y-2 text-sm text-gray-300">
+                <p>✨ Spiritele au fost contactate cu succes</p>
+                <p>🔮 Misterul continuă în următoarea sesiune</p>
+                <p>👻 Rămâi conectat pentru mai multe aventuri</p>
+              </div>
+              
+              {/* Next stream info */}
+              <div className="mt-6 p-4 bg-black/40 border border-purple-500/30 rounded-lg">
+                <p className="text-purple-400 text-sm font-semibold mb-1">
+                  📅 Următorul LIVE
+                </p>
+                <p className="text-white text-xs">
+                  Sâmbătă, 21:00 - Locația va fi anunțată
+                </p>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute top-4 left-4 text-purple-400/30 text-2xl animate-spin-slow">⚡</div>
+              <div className="absolute bottom-4 right-4 text-blue-400/30 text-xl animate-bounce">🌙</div>
+              <div className="absolute top-1/2 -left-2 text-purple-300/20 text-lg animate-pulse">✨</div>
+              <div className="absolute top-1/3 -right-2 text-yellow-400/30 text-sm animate-ping">🔮</div>
+            </div>
+          </div>
+          
           {/* Simple Live Indicator */}
           <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold z-10">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
