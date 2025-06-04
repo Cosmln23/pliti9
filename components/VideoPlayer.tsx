@@ -92,12 +92,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setWasLive(true)
       setShowEndOverlay(false) // Hide overlay when live
     } else if (wasLive && !(isLive || isYouTubeLive || isTwitchLive)) {
-      // Stream just ended
-      setTimeout(() => {
+      // Stream just ended - show overlay after delay
+      console.log('🎬 Stream ended, showing thank you overlay...')
+      const timer = setTimeout(() => {
         setShowEndOverlay(true)
-      }, 2000) // Show overlay 2 seconds after stream ends
+      }, 3000) // Show overlay 3 seconds after stream ends
+      
+      return () => clearTimeout(timer)
     }
   }, [isLive, isYouTubeLive, isTwitchLive, wasLive])
+
+  // Also listen for Twitch iframe offline events
+  useEffect(() => {
+    if (isTwitchLive && typeof window !== 'undefined') {
+      // Check if Twitch player is offline every 10 seconds
+      const checkTwitchStatus = setInterval(() => {
+        // In real implementation, you could listen to Twitch embed events
+        // For now, we'll detect manually when stream ends
+        console.log('🔍 Checking Twitch stream status...')
+      }, 10000)
+      
+      return () => clearInterval(checkTwitchStatus)
+    }
+  }, [isTwitchLive])
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
@@ -196,7 +213,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           
           {/* Stream Ended Overlay - appears when stream goes offline */}
           <div className={`absolute inset-0 bg-gradient-to-br from-purple-900/95 via-black/90 to-gray-900/95 backdrop-blur-sm flex items-center justify-center transition-opacity duration-1000 ${showEndOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="text-center p-8 max-w-md">
+            <div className="text-center p-8 max-w-md relative">
+              
+              {/* Close button pentru testare */}
+              <button
+                onClick={() => setShowEndOverlay(false)}
+                className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white text-sm transition-colors"
+                title="Închide overlay"
+              >
+                ✕
+              </button>
+              
               {/* Paranormal decoration */}
               <div className="relative mb-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -230,7 +257,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </div>
               
               {/* Decorative elements */}
-              <div className="absolute top-4 left-4 text-purple-400/30 text-2xl animate-spin-slow">⚡</div>
+              <div className="absolute top-8 left-4 text-purple-400/30 text-2xl animate-spin-slow">⚡</div>
               <div className="absolute bottom-4 right-4 text-blue-400/30 text-xl animate-bounce">🌙</div>
               <div className="absolute top-1/2 -left-2 text-purple-300/20 text-lg animate-pulse">✨</div>
               <div className="absolute top-1/3 -right-2 text-yellow-400/30 text-sm animate-ping">🔮</div>
@@ -238,9 +265,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
           
           {/* Simple Live Indicator */}
-          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold z-10">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span>LIVE</span>
+          <div className="absolute top-4 left-4 flex items-center space-x-2">
+            <div className="flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <span>LIVE</span>
+            </div>
+            
+            {/* Demo button pentru testare overlay */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => setShowEndOverlay(true)}
+                className="bg-purple-600 hover:bg-purple-700 px-2 py-1 rounded text-white text-xs"
+                title="Test End Overlay"
+              >
+                🎬 Test Final
+              </button>
+            )}
           </div>
         </div>
       ) : 

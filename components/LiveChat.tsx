@@ -30,7 +30,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [isConnected, setIsConnected] = useState(true)
   const [showEmojis, setShowEmojis] = useState(false)
   const [isSending, setIsSending] = useState(false)
-  const [showTwitchBridge, setShowTwitchBridge] = useState(true)
+  const [showTwitchBridge, setShowTwitchBridge] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -186,6 +186,14 @@ const LiveChat: React.FC<LiveChatProps> = ({
     }
   }
 
+  const handleSendClick = () => {
+    // Force focus away from input to prevent mobile keyboard issues
+    if (inputRef.current) {
+      inputRef.current.blur()
+    }
+    sendMessage()
+  }
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('ro-RO', {
       hour: '2-digit',
@@ -254,7 +262,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
         </div>
         
         {/* Twitch Bridge for Streamers */}
-        {showTwitchBridge && (
+        {showTwitchBridge && isStreamerView && (
           <div className="mt-3 p-3 bg-purple-900/30 border border-purple-600/30 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-purple-400 text-xs font-semibold">🎮 BRIDGE pentru Streamlabs/OBS</span>
@@ -358,8 +366,13 @@ const LiveChat: React.FC<LiveChatProps> = ({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Scrie un mesaj..."
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-base"
+              style={{ fontSize: '16px' }} // Prevent zoom on iOS
               maxLength={200}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
               {newMessage.length}/200
@@ -367,7 +380,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
           </div>
           
           <button
-            onClick={sendMessage}
+            onClick={handleSendClick}
             disabled={!newMessage.trim() || isSending}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex-shrink-0 touch-manipulation"
             style={{ minHeight: '44px', minWidth: '44px' }}
