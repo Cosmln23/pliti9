@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+// PLIPLI9 Chat Page - Ver 1.1
 interface ChatMessage {
   id: string
   username: string
