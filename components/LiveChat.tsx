@@ -30,6 +30,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [isConnected, setIsConnected] = useState(true)
   const [showEmojis, setShowEmojis] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [showTwitchBridge, setShowTwitchBridge] = useState(isStreamerView)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -240,8 +241,47 @@ const LiveChat: React.FC<LiveChatProps> = ({
           <div className="flex items-center space-x-2 text-gray-400 text-sm">
             <Users className="w-4 h-4" />
             <span>{viewerCount} spectatori</span>
+            {isStreamerView && (
+              <button
+                onClick={() => setShowTwitchBridge(!showTwitchBridge)}
+                className="ml-2 px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition-colors"
+                title="Toggle Twitch Bridge"
+              >
+                🎮 Twitch
+              </button>
+            )}
           </div>
         </div>
+        
+        {/* Twitch Bridge for Streamers */}
+        {showTwitchBridge && isStreamerView && (
+          <div className="mt-3 p-3 bg-purple-900/30 border border-purple-600/30 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-purple-400 text-xs font-semibold">🎮 TWITCH BRIDGE pentru Streamlabs</span>
+            </div>
+            <div className="space-y-1 max-h-20 overflow-y-auto text-xs">
+              {messages.slice(-3).map((msg) => (
+                <div key={msg.id} className="flex items-center space-x-2">
+                  <span className="text-purple-300">{msg.username}:</span>
+                  <span className="text-white flex-1">{msg.message}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`[SITE] ${msg.username}: ${msg.message}`)
+                      alert('📋 Copiat! Paste în Streamlabs chat')
+                    }}
+                    className="text-purple-400 hover:text-purple-300 text-xs px-1"
+                    title="Copy for Streamlabs"
+                  >
+                    📋
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-purple-300">
+              💡 Click 📋 pentru a copia mesajele în Streamlabs chat
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}
