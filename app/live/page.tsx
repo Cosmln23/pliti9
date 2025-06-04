@@ -641,11 +641,34 @@ const LivePage = () => {
 
   // Dacă utilizatorul are acces, afișează player-ul video și chat-ul
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex flex-col lg:flex-row h-screen pt-16">
+    <div className="fixed inset-0 bg-black flex flex-col">
+      {/* Simple header - minimal */}
+      <div className="bg-black border-b border-gray-800 px-4 py-2 flex items-center justify-between z-10">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white font-bold">PLIPLI9 PARANORMAL</span>
+          {isLive && (
+            <div className="flex items-center space-x-1 bg-red-600 px-2 py-1 rounded text-white text-xs">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <span>LIVE</span>
+            </div>
+          )}
+        </div>
         
-        {/* Video Player - ocupă majoritatea spațiului */}
-        <div className="flex-1 flex items-center justify-center bg-black">
+        {accessSession && (
+          <div className="text-green-400 text-sm">
+            ⏰ {formatTimeRemaining()}
+          </div>
+        )}
+      </div>
+
+      {/* Main content area - fixed height */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Video Player - takes most space */}
+        <div className="flex-1 bg-black flex items-center justify-center">
           {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
             <VideoPlayer 
               playbackId={liveSession?.playback_id} 
@@ -657,53 +680,21 @@ const LivePage = () => {
               twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
             />
           ) : (
-            <div className="text-center text-white p-12">
-              <div className="w-24 h-24 bg-paranormal-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Play className="w-12 h-12 text-paranormal-400" />
+            <div className="text-center text-white p-8">
+              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-4">
-                {connectionStatus === 'checking' ? 'Verifică status LIVE...' : 'LIVE-ul va începe în curând'}
-              </h3>
-              
-              {/* Twitch Live Status */}
-              {DEMO_TWITCH_LIVE.enabled && hasAccess && (
-                <div className="mb-6 p-4 bg-purple-600/20 border border-purple-600/30 rounded-lg">
-                  <div className="flex items-center justify-center space-x-2 mb-2">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                    <span className="text-purple-400 font-semibold">Twitch Stream Pregătit</span>
-                  </div>
-                  <p className="text-sm text-purple-300">
-                    Stream-ul va începe în curând pe @{DEMO_TWITCH_LIVE.channel}
-                  </p>
-                  <p className="text-xs text-purple-400 mt-1">
-                    📱 Folosește Streamlabs Mobile pentru a începe transmisia
-                  </p>
-                </div>
-              )}
-              
-              <p className="text-paranormal-300 mb-6">
-                Următorul LIVE în: {formatNextLiveTime()}
-              </p>
-              <p className="text-sm text-paranormal-400">
-                Rămâi pe pagină pentru a fi notificat automat când începe transmisia.
-              </p>
-              
-              {accessSession && (
-                <div className="mt-6 p-4 bg-paranormal-800/50 rounded-lg inline-block">
-                  <p className="text-ghost-400 text-sm">
-                    ✅ Cod activ • Timp rămas: {formatTimeRemaining()}
-                  </p>
-                </div>
-              )}
+              <h3 className="text-xl font-bold mb-2">LIVE va începe în curând</h3>
+              <p className="text-gray-400">Următorul stream în: {formatNextLiveTime()}</p>
             </div>
           )}
         </div>
 
-        {/* Chat Sidebar */}
-        <div className="w-full lg:w-80 bg-paranormal-900 border-l border-paranormal-700">
+        {/* Chat Sidebar - fixed width */}
+        <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col h-full">
           <LiveChat 
             isStreamerView={false}
-            streamId={liveSession?.session_id}
+            streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
             viewerCount={liveSession?.viewer_count || 0}
           />
         </div>

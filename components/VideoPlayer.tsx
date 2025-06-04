@@ -160,50 +160,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }
 
   return (
-    <div className={`relative group ${isFullscreen ? 'fixed inset-0 z-50' : 'w-full aspect-video'} bg-black rounded-lg overflow-hidden`}>
+    <div className={`relative group ${isFullscreen ? 'fixed inset-0 z-50' : 'w-full h-full'} bg-black overflow-hidden`}>
       
       {/* Twitch Embed Player */}
       {isTwitchLive && twitchEmbedUrl ? (
         <div className="w-full h-full relative">
           <iframe
-            src={twitchEmbedUrl}
+            src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false&controls=false`}
             width="100%"
             height="100%"
             frameBorder="0"
             scrolling="no"
             allowFullScreen
             className="w-full h-full"
+            style={{
+              border: 'none',
+              outline: 'none',
+            }}
           ></iframe>
           
-          {/* Twitch Live Overlay */}
-          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-purple-600 px-3 py-1 rounded-lg z-10">
+          {/* Simple Live Indicator */}
+          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold z-10">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-white text-sm font-semibold">TWITCH LIVE</span>
-          </div>
-          
-          {/* Twitch Link */}
-          <div className="absolute top-4 right-4 z-10">
-            <a 
-              href={`https://www.twitch.tv/${twitchChannel}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-1 bg-black/70 hover:bg-black/90 px-2 py-1 rounded text-white text-xs transition-all"
-            >
-              <ExternalLink className="w-3 h-3" />
-              <span>Vezi pe Twitch</span>
-            </a>
-          </div>
-          
-          {/* Chat reminder */}
-          <div className="absolute bottom-4 left-4 right-4 z-10">
-            <div className="bg-paranormal-800/90 backdrop-blur-sm rounded-lg p-3 text-center">
-              <p className="text-white text-sm">
-                🎮 <strong>PLIPLI9 PARANORMAL</strong> - Transmisie LIVE din teren! 
-              </p>
-              <p className="text-paranormal-300 text-xs mt-1">
-                💬 Chat-ul nostru este în sidebar-ul din dreapta
-              </p>
-            </div>
+            <span>LIVE</span>
           </div>
         </div>
       ) : 
@@ -222,164 +201,100 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           ></iframe>
           
           {/* YouTube Live Overlay */}
-          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded-lg z-10">
+          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold z-10">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-white text-sm font-semibold">YOUTUBE LIVE</span>
-          </div>
-          
-          {/* YouTube Link */}
-          <div className="absolute top-4 right-4 z-10">
-            <a 
-              href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-1 bg-black/70 hover:bg-black/90 px-2 py-1 rounded text-white text-xs transition-all"
-            >
-              <ExternalLink className="w-3 h-3" />
-              <span>Vezi pe YouTube</span>
-            </a>
-          </div>
-          
-          {/* Chat reminder */}
-          <div className="absolute bottom-4 left-4 right-4 z-10">
-            <div className="bg-paranormal-800/90 backdrop-blur-sm rounded-lg p-3 text-center">
-              <p className="text-white text-sm">
-                💬 <strong>Chat-ul LIVE</strong> este disponibil în bara din dreapta!
-              </p>
-            </div>
+            <span>YOUTUBE LIVE</span>
           </div>
         </div>
-      ) : (
-        /* Livepeer Video Player - Pentru streaming-ul existent */
-        <div className="w-full h-full relative">
-          {/* Pentru demo, folosim un placeholder care arată ca un video player real */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
-            
-            {/* Video Content Simulation */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-black/80">
-              {isLive && isPlaying && (
-                <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-600 px-3 py-1 rounded-lg">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  <span className="text-white text-sm font-semibold">LIVE</span>
+      ) :
+      
+      /* Livepeer HLS Player pentru stream-uri normale */
+      hlsUrl ? (
+        <>
+          <video
+            className="w-full h-full object-cover"
+            autoPlay={isLive}
+            controls={!isLive}
+            muted={isMuted}
+            poster={poster}
+            onLoadStart={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
+            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+            onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+          >
+            <source src={hlsUrl} type="application/x-mpegURL" />
+            Browser-ul tău nu suportă redarea video.
+          </video>
+
+          {/* Video Controls pentru stream-uri non-live */}
+          {!isLive && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center space-x-4">
+                <button onClick={togglePlay} className="text-white hover:text-paranormal-400 transition-colors">
+                  {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                </button>
+                
+                <button onClick={toggleMute} className="text-white hover:text-paranormal-400 transition-colors">
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                />
+                
+                <div className="flex-1 flex items-center space-x-2">
+                  <span className="text-white text-sm">{formatTime(currentTime)}</span>
+                  <div className="flex-1 bg-gray-600 rounded-full h-1">
+                    <div 
+                      className="bg-paranormal-500 h-1 rounded-full transition-all"
+                      style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-white text-sm">{formatTime(duration)}</span>
                 </div>
-              )}
+                
+                <button onClick={toggleFullscreen} className="text-white hover:text-paranormal-400 transition-colors">
+                  <Maximize className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Live Stream Status */}
+          {isLive && (
+            <div className="absolute top-4 left-4 flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-red-600 px-3 py-1 rounded text-white text-sm font-semibold">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <span>LIVE</span>
+              </div>
               
               {/* Connection Status */}
-              <div className="absolute top-4 right-4 flex items-center space-x-2">
-                {connectionStatus === 'connected' ? (
-                  <div className="flex items-center space-x-1 bg-green-600 px-2 py-1 rounded text-white text-xs">
-                    <Wifi className="w-3 h-3" />
-                    <span>HD</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-1 bg-red-600 px-2 py-1 rounded text-white text-xs">
-                    <WifiOff className="w-3 h-3" />
-                    <span>Reconnecting...</span>
-                  </div>
-                )}
+              <div className={`flex items-center space-x-1 px-2 py-1 rounded text-xs ${
+                connectionStatus === 'connected' ? 'bg-green-600 text-white' :
+                connectionStatus === 'connecting' ? 'bg-yellow-600 text-white' :
+                'bg-red-600 text-white'
+              }`}>
+                {connectionStatus === 'connected' ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                <span className="hidden sm:inline">
+                  {connectionStatus === 'connected' ? 'Conectat' : 
+                   connectionStatus === 'connecting' ? 'Conectare...' : 'Deconectat'}
+                </span>
               </div>
             </div>
-
-            {/* Center Play/Pause Button */}
-            {!isPlaying && (
-              <button
-                onClick={togglePlay}
-                className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-all duration-300"
-              >
-                <div className="w-20 h-20 bg-mystery-600 rounded-full flex items-center justify-center hover:bg-mystery-500 transition-colors shadow-2xl">
-                  <Play className="w-10 h-10 text-white ml-1" />
-                </div>
-              </button>
-            )}
-
-            {/* Video Controls */}
-            <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4 transition-all duration-300 ${isPlaying && isLive ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-              
-              {/* Progress Bar - Doar pentru VOD */}
-              {!isLive && (
-                <div className="w-full mb-4">
-                  <div className="w-full h-1 bg-gray-600 rounded-full cursor-pointer hover:h-2 transition-all">
-                    <div 
-                      className="h-full bg-mystery-500 rounded-full relative"
-                      style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '25%' }}
-                    >
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-mystery-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Control Bar */}
-              <div className="flex items-center justify-between">
-                {/* Left Controls */}
-                <div className="flex items-center space-x-4">
-                  {/* Play/Pause */}
-                  <button
-                    onClick={togglePlay}
-                    className="text-white hover:text-mystery-400 transition-colors"
-                  >
-                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                  </button>
-
-                  {/* Volume */}
-                  <div className="flex items-center space-x-2 group">
-                    <button
-                      onClick={toggleMute}
-                      className="text-white hover:text-mystery-400 transition-colors"
-                    >
-                      {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={isMuted ? 0 : volume}
-                      onChange={handleVolumeChange}
-                      className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    />
-                  </div>
-
-                  {/* Time Display */}
-                  {!isLive ? (
-                    <div className="text-white text-sm font-mono">
-                      {formatTime(currentTime)} / {formatTime(duration || 3600)}
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="text-white text-sm font-semibold">LIVE</span>
-                      <span className="text-gray-300 text-xs">• HD Quality</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Controls */}
-                <div className="flex items-center space-x-2">
-                  {/* Quality Selector */}
-                  <button className="text-white hover:text-mystery-400 transition-colors p-1">
-                    <Settings className="w-5 h-5" />
-                  </button>
-
-                  {/* Fullscreen Button */}
-                  <button
-                    onClick={toggleFullscreen}
-                    className="text-white hover:text-mystery-400 transition-colors p-1"
-                  >
-                    <Maximize className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Development Info */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs p-2 rounded">
-                <div>Playback ID: {playbackId}</div>
-                {playbackUrl && <div>URL: {playbackUrl}</div>}
-                <div>Mode: {isLive ? 'LIVE' : 'VOD'}</div>
-              </div>
-            )}
+          )}
+        </>
+      ) : (
+        /* Fallback pentru cazuri fără URL */
+        <div className="w-full h-full flex items-center justify-center bg-gray-900">
+          <div className="text-center">
+            <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-400">Stream indisponibil momentan</p>
           </div>
         </div>
       )}

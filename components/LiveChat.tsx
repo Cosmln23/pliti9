@@ -31,6 +31,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [showEmojis, setShowEmojis] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Paranormal themed emoticons
   const paranormalEmojis = [
@@ -176,18 +177,16 @@ const LiveChat: React.FC<LiveChatProps> = ({
   }
 
   return (
-    <div className={`bg-gray-900 border border-gray-700 rounded-lg flex flex-col ${
-      isStreamerView ? 'h-80' : 'h-96'
-    }`}>
+    <div className="h-full flex flex-col bg-gray-900">
       {/* Chat Header */}
-      <div className="bg-purple-900/50 p-4 border-b border-gray-700 rounded-t-lg">
+      <div className="border-b border-gray-800 p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <MessageCircle className="w-5 h-5 text-purple-400" />
-            <span className="font-bold text-white">Chat Live</span>
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+            <h3 className="text-white font-semibold">Chat Live</h3>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <div className="flex items-center space-x-2 text-gray-400 text-sm">
             <Users className="w-4 h-4" />
             <span>{viewerCount} spectatori</span>
           </div>
@@ -195,51 +194,46 @@ const LiveChat: React.FC<LiveChatProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3">
-        {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
-            <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Fii primul care comentează!</p>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <div key={msg.id} className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500">{formatTime(msg.timestamp)}</span>
-                <span className={`text-sm font-medium ${getMessageColor(msg.type)}`}>
-                  {msg.username}
-                  {msg.type === 'admin' && ' 👑'}
-                </span>
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        {messages.map((message) => (
+          <div key={message.id} className="group">
+            <div className="flex items-start space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {message.username.slice(0, 2).toUpperCase()}
               </div>
-              <p className="text-white text-sm leading-relaxed break-words">
-                {msg.message}
-              </p>
-              {msg.likes && msg.likes > 0 && (
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <Heart className="w-3 h-3 text-red-400" />
-                  <span>{msg.likes}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="text-purple-400 font-semibold text-sm">{message.username}</span>
+                  <span className="text-gray-500 text-xs">{formatTime(message.timestamp)}</span>
                 </div>
-              )}
+                <p className="text-white text-sm break-words">{message.message}</p>
+              </div>
             </div>
-          ))
+          </div>
+        ))}
+        
+        {messages.length === 0 && (
+          <div className="text-center text-gray-400 py-8">
+            <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">Fii primul care scrie în chat!</p>
+            <p className="text-xs text-gray-500 mt-1">Folosește emoji-urile paranormale 👻</p>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="p-4 border-t border-gray-700">
+      {/* Input Area */}
+      <div className="border-t border-gray-800 p-3">
         {/* Emoji Selector */}
         {showEmojis && (
-          <div className="mb-3 p-3 bg-gray-800 border border-gray-600 rounded-lg">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-purple-400 text-sm font-medium">Emoticonuri Paranormale:</span>
-            </div>
-            <div className="grid grid-cols-8 gap-2">
+          <div className="mb-3 p-2 bg-gray-800 rounded-lg">
+            <div className="text-xs text-gray-400 mb-2">Emoji paranormale:</div>
+            <div className="grid grid-cols-8 gap-1">
               {paranormalEmojis.map((emoji, index) => (
                 <button
                   key={index}
                   onClick={() => addEmoji(emoji)}
-                  className="text-xl hover:bg-purple-600/20 p-1 rounded transition-colors"
+                  className="text-lg hover:bg-gray-700 rounded p-1 transition-colors"
                   title={`Adaugă ${emoji}`}
                 >
                   {emoji}
@@ -248,39 +242,47 @@ const LiveChat: React.FC<LiveChatProps> = ({
             </div>
           </div>
         )}
-        
+
         <div className="flex space-x-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Scrie un mesaj..."
-            className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            maxLength={200}
-            disabled={!isConnected}
-          />
           <button
             onClick={() => setShowEmojis(!showEmojis)}
-            className="bg-gray-700 hover:bg-gray-600 text-purple-400 p-2 rounded-lg transition-colors"
-            title="Emoticonuri Paranormale"
+            className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors flex-shrink-0"
+            title="Emoji paranormale"
           >
             👻
           </button>
+          
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Scrie un mesaj..."
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+              maxLength={200}
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+              {newMessage.length}/200
+            </div>
+          </div>
+          
           <button
             onClick={sendMessage}
             disabled={!newMessage.trim() || !isConnected}
-            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex-shrink-0"
           >
-            <Send className="w-4 h-4" />
+            {isConnected ? (
+              <Send className="w-4 h-4" />
+            ) : (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            )}
           </button>
         </div>
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <span>{newMessage.length}/200</span>
-          <div className="flex items-center space-x-1">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-            <span>{isConnected ? 'Conectat' : 'Deconectat'}</span>
-          </div>
+        
+        <div className="mt-2 text-xs text-gray-500 text-center">
+          {isConnected ? 'Conectat' : 'Deconectat'} • Mesajele sunt live pentru toți spectatorii
         </div>
       </div>
     </div>
