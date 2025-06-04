@@ -12,24 +12,31 @@ interface ChatMessage {
 
 const StreamlabsWidget = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState('connecting')
 
   useEffect(() => {
-    // Test de conectivitate
-    const testConnection = async () => {
-      try {
-        const response = await fetch('/api/health')
-        setConnectionStatus(response.ok ? 'connected' : 'error')
-      } catch (error) {
-        setConnectionStatus('error')
-        console.error('Connection test failed:', error)
+    // Demo messages pentru test imediat
+    const demoMessages = [
+      {
+        id: 'demo-1',
+        username: 'ParanormalFan',
+        message: 'Salut PLIPLI9! 👻',
+        timestamp: new Date().toISOString(),
+        type: 'user' as const
+      },
+      {
+        id: 'demo-2', 
+        username: 'PLIPLI9',
+        message: 'Bună seara tuturor! Să începem investigația! 🔍',
+        timestamp: new Date(Date.now() - 30000).toISOString(),
+        type: 'admin' as const
       }
-    }
+    ]
 
-    testConnection()
+    setMessages(demoMessages)
+    setConnectionStatus('demo')
 
-    // Polling pentru mesaje noi
+    // Polling pentru mesaje reale
     const pollMessages = async () => {
       try {
         const response = await fetch(`/api/chat/messages?streamId=plipli9-paranormal-live&t=${Date.now()}`, {
@@ -42,25 +49,22 @@ const StreamlabsWidget = () => {
         
         if (response.ok) {
           const data = await response.json()
-          if (data.messages && Array.isArray(data.messages)) {
-            // Păstrăm doar ultimele 5 mesaje pentru overlay
+          if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
             setMessages(data.messages.slice(-5))
-            setConnectionStatus('connected')
+            setConnectionStatus('live')
           }
-        } else {
-          setConnectionStatus('error')
         }
       } catch (error) {
         console.error('Error fetching messages:', error)
-        setConnectionStatus('error')
-      } finally {
-        setIsLoading(false)
+        // Păstrăm demo messages dacă API nu funcționează
       }
     }
 
-    // Poll la fiecare 3 secunde (mai conservativ pentru mobile)
-    const interval = setInterval(pollMessages, 3000)
-    pollMessages() // Initial load
+    // Poll la fiecare 5 secunde
+    const interval = setInterval(pollMessages, 5000)
+    
+    // Primul poll după 2 secunde
+    setTimeout(pollMessages, 2000)
 
     return () => clearInterval(interval)
   }, [])
@@ -72,17 +76,13 @@ const StreamlabsWidget = () => {
         minute: '2-digit'
       })
     } catch {
-      return new Date().toLocaleTimeString('ro-RO', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      return '00:00'
     }
   }
 
   const getUsernameColor = (username: string, type: string) => {
     if (type === 'admin') return 'text-purple-300'
     
-    // Generate consistent color based on username
     const colors = [
       'text-blue-300', 'text-green-300', 'text-yellow-300', 
       'text-pink-300', 'text-red-300', 'text-indigo-300',
@@ -92,86 +92,55 @@ const StreamlabsWidget = () => {
     return colors[index]
   }
 
-  // Demo messages pentru test
-  const demoMessages = [
-    {
-      id: 'demo-1',
-      username: 'ParanormalFan',
-      message: 'Salut PLIPLI9! 👻',
-      timestamp: new Date().toISOString(),
-      type: 'user' as const
-    },
-    {
-      id: 'demo-2', 
-      username: 'PLIPLI9',
-      message: 'Bună seara tuturor! Să începem investigația! 🔍',
-      timestamp: new Date(Date.now() - 30000).toISOString(),
-      type: 'admin' as const
+  const getStatusColor = () => {
+    switch(connectionStatus) {
+      case 'live': return 'bg-green-500'
+      case 'demo': return 'bg-blue-500' 
+      default: return 'bg-yellow-500'
     }
-  ]
-
-  // Afișează demo dacă nu sunt mesaje și e loading
-  const displayMessages = messages.length > 0 ? messages : (isLoading ? demoMessages : [])
+  }
 
   return (
     <div className="fixed inset-0 w-full h-full p-3 pointer-events-none">
-      {/* Connection Status pentru debugging */}
-      <div className="fixed top-2 left-2 opacity-50 pointer-events-none">
-        <div className={`w-3 h-3 rounded-full ${
-          connectionStatus === 'connected' ? 'bg-green-500' : 
-          connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'
-        }`}></div>
+      {/* Connection Status */}
+      <div className="fixed top-2 left-2 opacity-70 pointer-events-none">
+        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
       </div>
 
-      {/* Chat Container - Fixed height pentru Streamlabs */}
+      {/* Chat Container */}
       <div className="flex flex-col-reverse justify-start h-full max-h-[600px] space-y-reverse space-y-2 overflow-hidden">
-        {displayMessages.map((message, index) => (
+        {messages.map((message, index) => (
           <div 
             key={message.id}
-            className="animate-in slide-in-from-bottom duration-300 opacity-0"
+            className="animate-in slide-in-from-bottom duration-300"
             style={{ 
-              animationDelay: `${index * 50}ms`,
-              animationFillMode: 'forwards'
+              animationDelay: `${index * 100}ms`
             }}
           >
-            {/* Message Bubble - Mai mic pentru mobile */}
             <div className="bg-black/90 backdrop-blur-sm rounded-lg p-2.5 border border-purple-400/40 shadow-xl max-w-[350px]">
               <div className="flex items-center space-x-2 mb-1">
-                {/* Username cu culoare */}
                 <span className={`font-bold text-xs ${getUsernameColor(message.username, message.type)}`}>
                   {message.username}
                   {message.type === 'admin' && ' 👑'}
                 </span>
-                
-                {/* Timestamp */}
                 <span className="text-gray-400 text-[10px]">
                   {formatTime(message.timestamp)}
                 </span>
               </div>
-              
-              {/* Message content */}
               <div className="text-white text-sm leading-relaxed break-words">
                 {message.message}
               </div>
             </div>
           </div>
         ))}
-        
-        {/* Empty state doar dacă nu e loading */}
-        {displayMessages.length === 0 && !isLoading && (
-          <div className="text-center text-gray-400 opacity-40">
-            <div className="bg-black/70 rounded-lg p-3 border border-purple-500/20 max-w-[300px]">
-              <p className="text-xs">💬 Așteptăm mesaje...</p>
-              <p className="text-[10px] mt-1 opacity-60">Status: {connectionStatus}</p>
-            </div>
-          </div>
-        )}
       </div>
       
-      {/* PLIPLI9 Branding - Mai mic */}
+      {/* Branding */}
       <div className="fixed bottom-3 right-3 opacity-50 pointer-events-none">
         <div className="bg-purple-600/80 backdrop-blur-sm rounded px-2 py-1 border border-purple-400/30">
-          <span className="text-white text-[10px] font-semibold">PLIPLI9</span>
+          <span className="text-white text-[10px] font-semibold">
+            PLIPLI9 {connectionStatus === 'live' ? '• LIVE' : '• DEMO'}
+          </span>
         </div>
       </div>
     </div>
