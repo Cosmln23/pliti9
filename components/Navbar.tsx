@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Menu, X, Ghost, Video, Calendar, ShoppingBag, Zap } from 'lucide-react'
+import { Menu, X, Ghost, Video, Calendar, ShoppingBag, Zap, MessageCircle } from 'lucide-react'
 
 interface NavbarProps {
   logoUrl?: string
@@ -15,6 +15,7 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl, siteName = 'Plipli9 Paranormal
   const menuItems = [
     { href: '/', label: 'Acasă', icon: Ghost },
     { href: '/live', label: 'LIVE Paranormal', icon: Zap, highlight: true },
+    { href: '/chat', label: 'Chat LIVE', icon: MessageCircle, highlight: true },
     { href: '/videos', label: 'Videoclipuri', icon: Video },
     { href: '/events', label: 'Evenimente', icon: Calendar },
     { href: '/shop', label: 'Magazin', icon: ShoppingBag },
