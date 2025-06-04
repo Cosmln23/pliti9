@@ -15,48 +15,23 @@ export interface ChatMessage {
 export const chatMessages: ChatMessage[] = []
 export let messageIdCounter = 1
 
-// Add some demo messages for testing
-function initializeDemoMessages() {
-  if (chatMessages.length === 0) {
-    const demoMessages = [
-      {
-        streamId: 'plipli9-paranormal-live',
-        username: 'Investigator1',
-        message: 'Salut tuturor! 👻 Gata pentru o nouă sesiune paranormală?',
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-        type: 'user' as const,
-        likes: 0
-      },
-      {
-        streamId: 'plipli9-paranormal-live',
-        username: 'GhostHunter',
-        message: 'Am auzit că locul de azi e cu adevărat bântuit! 💀🔮',
-        timestamp: new Date(Date.now() - 240000).toISOString(),
-        type: 'user' as const,
-        likes: 0
-      },
-      {
-        streamId: 'plipli9-paranormal-live',
-        username: 'PLIPLI9',
-        message: 'Bun venit tuturor! Să începem investigația! ⚡🕯️',
-        timestamp: new Date(Date.now() - 180000).toISOString(),
-        type: 'admin' as const,
-        likes: 0
-      }
-    ]
-
-    demoMessages.forEach(msg => {
-      chatMessages.push({
-        ...msg,
-        id: messageIdCounter.toString()
-      })
-      messageIdCounter++
-    })
+// Demo messages pentru testing - doar unul simplu
+const DEMO_MESSAGES: ChatMessage[] = [
+  {
+    id: 'demo-1',
+    streamId: 'plipli9-paranormal-live',
+    username: 'PLIPLI9',
+    message: 'Bună seara tuturor! 👻',
+    timestamp: new Date().toISOString(),
+    type: 'admin',
+    likes: 0
   }
-}
+]
 
-// Initialize demo messages on first load
-initializeDemoMessages()
+// Add some demo messages for testing
+if (chatMessages.length === 0) {
+  chatMessages.push(...DEMO_MESSAGES)
+}
 
 export function addMessage(message: Omit<ChatMessage, 'id'>): ChatMessage {
   const newMessage: ChatMessage = {

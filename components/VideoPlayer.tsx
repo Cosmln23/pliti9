@@ -33,6 +33,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   const [error, setError] = useState<string | null>(null)
+  const [showEndOverlay, setShowEndOverlay] = useState(false)
+  const [wasLive, setWasLive] = useState(false)
 
   // YouTube Live URL construction
   const youtubeEmbedUrl = youtubeVideoId 
@@ -83,6 +85,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return () => clearInterval(checkConnection)
     }
   }, [isLive, isYouTubeLive, isTwitchLive])
+
+  useEffect(() => {
+    // Track when stream goes from live to offline
+    if (isLive || isYouTubeLive || isTwitchLive) {
+      setWasLive(true)
+      setShowEndOverlay(false) // Hide overlay when live
+    } else if (wasLive && !(isLive || isYouTubeLive || isTwitchLive)) {
+      // Stream just ended
+      setTimeout(() => {
+        setShowEndOverlay(true)
+      }, 2000) // Show overlay 2 seconds after stream ends
+    }
+  }, [isLive, isYouTubeLive, isTwitchLive, wasLive])
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
@@ -180,7 +195,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           ></iframe>
           
           {/* Stream Ended Overlay - appears when stream goes offline */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/95 via-black/90 to-gray-900/95 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className={`absolute inset-0 bg-gradient-to-br from-purple-900/95 via-black/90 to-gray-900/95 backdrop-blur-sm flex items-center justify-center transition-opacity duration-1000 ${showEndOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="text-center p-8 max-w-md">
               {/* Paranormal decoration */}
               <div className="relative mb-6">

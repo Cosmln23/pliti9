@@ -30,7 +30,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
   const [isConnected, setIsConnected] = useState(true)
   const [showEmojis, setShowEmojis] = useState(false)
   const [isSending, setIsSending] = useState(false)
-  const [showTwitchBridge, setShowTwitchBridge] = useState(isStreamerView)
+  const [showTwitchBridge, setShowTwitchBridge] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollInterval = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -254,10 +254,10 @@ const LiveChat: React.FC<LiveChatProps> = ({
         </div>
         
         {/* Twitch Bridge for Streamers */}
-        {showTwitchBridge && isStreamerView && (
+        {showTwitchBridge && (
           <div className="mt-3 p-3 bg-purple-900/30 border border-purple-600/30 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
-              <span className="text-purple-400 text-xs font-semibold">🎮 TWITCH BRIDGE pentru Streamlabs</span>
+              <span className="text-purple-400 text-xs font-semibold">🎮 BRIDGE pentru Streamlabs/OBS</span>
             </div>
             <div className="space-y-1 max-h-20 overflow-y-auto text-xs">
               {messages.slice(-3).map((msg) => (
@@ -266,11 +266,18 @@ const LiveChat: React.FC<LiveChatProps> = ({
                   <span className="text-white flex-1">{msg.message}</span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`[SITE] ${msg.username}: ${msg.message}`)
-                      alert('📋 Copiat! Paste în Streamlabs chat')
+                      navigator.clipboard.writeText(`${msg.username}: ${msg.message}`)
+                      // Show success feedback
+                      const button = document.activeElement as HTMLButtonElement
+                      if (button) {
+                        button.textContent = '✅'
+                        setTimeout(() => {
+                          button.textContent = '📋'
+                        }, 1000)
+                      }
                     }}
                     className="text-purple-400 hover:text-purple-300 text-xs px-1"
-                    title="Copy for Streamlabs"
+                    title="Copy pentru Streamlabs"
                   >
                     📋
                   </button>
@@ -278,7 +285,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
               ))}
             </div>
             <div className="mt-2 text-xs text-purple-300">
-              💡 Click 📋 pentru a copia mesajele în Streamlabs chat
+              💡 Mesajele se copiază automat - paste în Streamlabs pentru a le vedea în live
             </div>
           </div>
         )}
