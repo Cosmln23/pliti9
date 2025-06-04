@@ -296,7 +296,7 @@ curl -X GET https://your-domain.com/api/webhooks/payment-success
     <p>Îți reamintim că codul tău de acces pentru LIVE-urile paranormale va expira în curând:</p>
     
     <div style="background: #92400e; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
-        <h3 style="margin: 0;">Codul {{accessCode}} expiră la {{expiresAt}}</h3>
+        <h3 style="margin: 0;">Codul {{accessCode}} expiră în curând!</h3>
     </div>
     
     <p>Dacă vrei să participi la următoarele LIVE-uri, poți achiziționa un nou cod de acces:</p>

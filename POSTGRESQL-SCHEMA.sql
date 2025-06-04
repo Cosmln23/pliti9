@@ -11,7 +11,7 @@
 -- ==========================================
 CREATE TABLE access_codes (
   id SERIAL PRIMARY KEY,
-  code VARCHAR(12) UNIQUE NOT NULL,
+  code VARCHAR(20) UNIQUE NOT NULL,
   email VARCHAR(255) NOT NULL,
   phone_number VARCHAR(20) NULL,
   payment_intent_id VARCHAR(255) NULL,
@@ -19,10 +19,20 @@ CREATE TABLE access_codes (
   payment_method VARCHAR(50) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP NOT NULL,
-  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'expired')),
-  last_used_at TIMESTAMP NULL,
+  status VARCHAR(20) DEFAULT 'active',
   usage_count INTEGER DEFAULT 0,
-  ip_address VARCHAR(45) NULL
+  max_uses INTEGER DEFAULT 3,
+  ip_address INET,
+  
+  -- Session tracking pentru ONE-TIME device limit
+  active_session_id VARCHAR(255),
+  active_device_info JSONB,
+  last_activity_at TIMESTAMP,
+  session_started_at TIMESTAMP,
+  previous_sessions JSONB DEFAULT '[]'::jsonb,
+  
+  -- Indexuri pentru performance
+  CONSTRAINT valid_status CHECK (status IN ('active', 'expired', 'used', 'in_use', 'suspended'))
 );
 
 -- Indexes pentru performance

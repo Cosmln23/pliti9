@@ -20,7 +20,9 @@ import VideoPlayer from '@/components/VideoPlayer'
 import PaymentForm from '@/components/PaymentForm'
 import AccessControl from '@/components/AccessControl'
 import ChatComponent from '@/components/ChatComponent'
+import LiveChat from '@/components/LiveChat'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import SessionTakeoverModal from '@/components/SessionTakeoverModal'
 
 // Types pentru API responses
 interface LiveSession {
@@ -50,6 +52,24 @@ interface AccessSession {
   last_used_at: string
 }
 
+interface AccessCode {
+  code: string
+  email: string
+  expires_at: string
+  usage_count: number
+}
+
+interface SessionConflict {
+  needsTakeover: boolean
+  currentDevice?: {
+    userAgent: string
+    ip: string
+    connectedAt: string
+    sessionId: string
+  }
+  message: string
+}
+
 const LivePage = () => {
   const [hasAccess, setHasAccess] = useState(false)
   const [accessSession, setAccessSession] = useState<AccessSession | null>(null)
@@ -57,9 +77,157 @@ const LivePage = () => {
   const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'offline'>('checking')
   const [mounted, setMounted] = useState(false)
   const [nextLiveTime, setNextLiveTime] = useState('')
+  const [accessCode, setAccessCode] = useState('')
+  const [userAccessCode, setUserAccessCode] = useState<AccessCode | null>(null)
+  const [isValidating, setIsValidating] = useState(false)
+  const [currentSession, setCurrentSession] = useState<any>(null)
+  
+  // Session conflict state
+  const [showTakeoverModal, setShowTakeoverModal] = useState(false)
+  const [sessionConflict, setSessionConflict] = useState<SessionConflict | null>(null)
+  const [isProcessingTakeover, setIsProcessingTakeover] = useState(false)
+
+  // YouTube Live configuration
+  const [isYouTubeLive, setIsYouTubeLive] = useState(false)
+  const [youtubeVideoId, setYoutubeVideoId] = useState('')
+
+  // YouTube Live override pentru demo
+  const DEMO_YOUTUBE_LIVE = {
+    enabled: true,
+    videoId: 'jfKfPfyJRdk', // Live stream demo ID - înlocuiește cu ID-ul tău real
+    title: 'PLIPLI9 PARANORMAL - YouTube Live'
+  }
+
+  const getDeviceInfo = () => {
+    return {
+      userAgent: navigator.userAgent,
+      ip: 'auto-detect', // Will be filled by server
+      screenResolution: `${screen.width}x${screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    }
+  }
+
+  const checkSessionConflict = async (code: string) => {
+    try {
+      const response = await fetch('/api/access-codes/session-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          deviceInfo: getDeviceInfo()
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.needsTakeover) {
+        setSessionConflict(result)
+        setShowTakeoverModal(true)
+        return false // Nu permite accesul încă
+      }
+
+      return result.canAccess
+    } catch (error) {
+      console.error('Eroare verificare conflict sesiune:', error)
+      return true // Permite accesul în caz de eroare
+    }
+  }
+
+  const handleTakeover = async () => {
+    if (!sessionConflict || !accessCode) return
+
+    setIsProcessingTakeover(true)
+    try {
+      const response = await fetch('/api/access-codes/takeover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: accessCode,
+          deviceInfo: getDeviceInfo(),
+          confirmTakeover: true
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        // Sesiune preluată cu succes
+        setShowTakeoverModal(false)
+        setSessionConflict(null)
+        
+        // Continuă cu validarea normală
+        await validateAccessCode()
+      } else {
+        setError('Nu s-a putut prelua sesiunea. Încearcă din nou.')
+      }
+    } catch (error) {
+      setError('Eroare la preluarea sesiunii')
+    } finally {
+      setIsProcessingTakeover(false)
+    }
+  }
+
+  const validateAccessCode = async () => {
+    if (!accessCode.trim()) {
+      setError('Introdu codul de acces')
+      return
+    }
+
+    setIsValidating(true)
+    setError('')
+
+    try {
+      // Prima verifică conflictele de sesiune
+      const canAccess = await checkSessionConflict(accessCode)
+      if (!canAccess) {
+        setIsValidating(false)
+        return // Așteaptă decizia utilizatorului despre takeover
+      }
+
+      // Validare normală
+      const response = await fetch('/api/access-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: accessCode,
+          deviceInfo: getDeviceInfo()
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.valid) {
+        setUserAccessCode(result.accessCode)
+        setCurrentSession(result.session)
+        
+        // Salvează în localStorage pentru persistență
+        localStorage.setItem('plipli9_access_code', accessCode)
+        localStorage.setItem('plipli9_session_id', result.session?.sessionId || '')
+      } else {
+        setError(result.error || 'Cod invalid sau expirat')
+      }
+    } catch (error) {
+      console.error('Eroare validare:', error)
+      setError('Eroare de conectare. Încearcă din nou.')
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  // Verifică localStorage la încărcare
+  useEffect(() => {
+    const savedCode = localStorage.getItem('plipli9_access_code')
+    const savedSessionId = localStorage.getItem('plipli9_session_id')
+    
+    if (savedCode && savedSessionId) {
+      setAccessCode(savedCode)
+      // Re-validează sesiunea salvată
+      validateAccessCode()
+    }
+  }, [])
 
   // Fix hydration - doar pe client
   useEffect(() => {
@@ -231,6 +399,16 @@ const LivePage = () => {
     return nextLiveTime || 'Se calculează...'
   }
 
+  // Check pentru YouTube Live Demo
+  useEffect(() => {
+    if (DEMO_YOUTUBE_LIVE.enabled && hasAccess) {
+      setIsYouTubeLive(true)
+      setYoutubeVideoId(DEMO_YOUTUBE_LIVE.videoId)
+      setIsLive(true)
+      setConnectionStatus('connected')
+    }
+  }, [hasAccess])
+
   // Nu renderiza timpurile dinamice până nu e mounted
   if (!mounted) {
     return (
@@ -246,32 +424,32 @@ const LivePage = () => {
   // Dacă utilizatorul nu are acces, afișează formularele de plată/acces
   if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-paranormal-50 pt-8">
+      <div className="min-h-screen bg-paranormal-50 pt-16 pb-20 sm:pt-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Header cu status conexiune */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-mystery-600 rounded-xl flex items-center justify-center mystery-glow">
-                <Zap className="w-6 h-6 text-white" />
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-mystery-600 rounded-xl flex items-center justify-center mystery-glow">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-paranormal-800">
+              <h1 className="text-2xl sm:text-4xl font-bold text-paranormal-800">
                 LIVE <span className="text-mystery-600">Paranormal</span>
               </h1>
             </div>
             
             {/* Status LIVE și conexiune */}
-            <div className="flex flex-col items-center space-y-4 mb-8">
-              <div className="flex items-center space-x-4">
-                <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+            <div className="flex flex-col items-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <div className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-full text-sm ${
                   isLive 
                     ? 'bg-red-100 text-red-800' 
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  <div className={`w-3 h-3 rounded-full ${
+                  <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
                     isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
                   }`}></div>
-                  <span className="font-medium">
+                  <span className="font-medium text-xs sm:text-sm">
                     {isLive ? 'LIVE ACUM' : 'OFFLINE'}
                   </span>
                   {liveSession && (
@@ -282,15 +460,15 @@ const LivePage = () => {
                 </div>
                 
                 {/* Connection Status */}
-                <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs ${
+                <div className={`flex items-center space-x-1 px-2 sm:px-3 py-1 rounded-full text-xs ${
                   connectionStatus === 'connected' ? 'bg-green-100 text-green-800' :
                   connectionStatus === 'checking' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-red-100 text-red-800'
                 }`}>
-                  {connectionStatus === 'connected' ? <Wifi className="w-3 h-3" /> : 
+                  {connectionStatus === 'connected' ? <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : 
                    connectionStatus === 'checking' ? <LoadingSpinner /> : 
-                   <WifiOff className="w-3 h-3" />}
-                  <span>
+                   <WifiOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                  <span className="text-xs">
                     {connectionStatus === 'connected' ? 'Conectat' :
                      connectionStatus === 'checking' ? 'Verifică...' :
                      'Conexiune erorată'}
@@ -300,8 +478,8 @@ const LivePage = () => {
               
               {!isLive && (
                 <div className="flex items-center space-x-2 text-paranormal-600">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">
                     Următorul LIVE în: <strong>{formatNextLiveTime()}</strong>
                   </span>
                 </div>
@@ -309,10 +487,10 @@ const LivePage = () => {
               
               {isLive && liveSession && (
                 <div className="text-center">
-                  <p className="text-ghost-600 font-medium">
+                  <p className="text-ghost-600 font-medium text-sm sm:text-base">
                     📍 {liveSession.location}
                   </p>
-                  <p className="text-sm text-paranormal-500">
+                  <p className="text-xs sm:text-sm text-paranormal-500">
                     Început: {new Date(liveSession.started_at).toLocaleTimeString('ro-RO')}
                   </p>
                 </div>
@@ -321,7 +499,7 @@ const LivePage = () => {
           </div>
 
           {/* Acces Protection */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             
             {/* Access Code Form */}
             <div className="bg-white rounded-xl shadow-lg p-8">
@@ -447,83 +625,60 @@ const LivePage = () => {
       <div className="flex flex-col lg:flex-row h-screen pt-16">
         
         {/* Video Player - ocupă majoritatea spațiului */}
-        <div className="flex-1 flex flex-col">
-          <div className="bg-paranormal-900 px-6 py-4 border-b border-paranormal-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${
-                    isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
-                  }`}></div>
-                  <span className="text-white font-medium">
-                    {isLive ? 'LIVE PARANORMAL' : 'OFFLINE'}
-                  </span>
-                  {liveSession && (
-                    <span className="text-xs bg-black/20 px-2 py-1 rounded text-paranormal-300">
-                      {liveSession.location}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="flex items-center space-x-2 text-paranormal-300">
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm">
-                    {liveSession?.viewer_count || 0} exploratori online
-                  </span>
-                </div>
+        <div className="flex-1 flex items-center justify-center bg-black">
+          {isLive && (liveSession || isYouTubeLive) ? (
+            <VideoPlayer 
+              playbackId={liveSession?.playback_id} 
+              isLive={true}
+              playbackUrl={liveSession?.playback_url}
+              isYouTubeLive={isYouTubeLive}
+              youtubeVideoId={youtubeVideoId}
+            />
+          ) : (
+            <div className="text-center text-white p-12">
+              <div className="w-24 h-24 bg-paranormal-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Play className="w-12 h-12 text-paranormal-400" />
               </div>
+              <h3 className="text-2xl font-bold mb-4">
+                {connectionStatus === 'checking' ? 'Verifică status LIVE...' : 'LIVE-ul va începe în curând'}
+              </h3>
               
-              <div className="flex items-center space-x-4">
-                {accessSession && (
-                  <div className="text-ghost-400 text-sm">
-                    ⏰ {formatTimeRemaining()}
+              {/* YouTube Live Status */}
+              {DEMO_YOUTUBE_LIVE.enabled && hasAccess && (
+                <div className="mb-6 p-4 bg-red-600/20 border border-red-600/30 rounded-lg">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-red-400 font-semibold">YouTube Live Pregătit</span>
                   </div>
-                )}
-                <div className="text-ghost-400 text-sm">
-                  Cod: ****{accessSession?.code.slice(-4)}
+                  <p className="text-sm text-red-300">
+                    Stream-ul va începe în curând pe YouTube Live
+                  </p>
                 </div>
-              </div>
+              )}
+              
+              <p className="text-paranormal-300 mb-6">
+                Următorul LIVE în: {formatNextLiveTime()}
+              </p>
+              <p className="text-sm text-paranormal-400">
+                Rămâi pe pagină pentru a fi notificat automat când începe transmisia.
+              </p>
+              
+              {accessSession && (
+                <div className="mt-6 p-4 bg-paranormal-800/50 rounded-lg inline-block">
+                  <p className="text-ghost-400 text-sm">
+                    ✅ Cod activ • Timp rămas: {formatTimeRemaining()}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-          
-          <div className="flex-1 flex items-center justify-center bg-black">
-            {isLive && liveSession ? (
-              <VideoPlayer 
-                playbackId={liveSession.playback_id} 
-                isLive={true}
-                playbackUrl={liveSession.playback_url}
-              />
-            ) : (
-              <div className="text-center text-white p-12">
-                <div className="w-24 h-24 bg-paranormal-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Play className="w-12 h-12 text-paranormal-400" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4">
-                  {connectionStatus === 'checking' ? 'Verifică status LIVE...' : 'LIVE-ul va începe în curând'}
-                </h3>
-                <p className="text-paranormal-300 mb-6">
-                  Următorul LIVE în: {formatNextLiveTime()}
-                </p>
-                <p className="text-sm text-paranormal-400">
-                  Rămâi pe pagină pentru a fi notificat automat când începe transmisia.
-                </p>
-                
-                {accessSession && (
-                  <div className="mt-6 p-4 bg-paranormal-800/50 rounded-lg inline-block">
-                    <p className="text-ghost-400 text-sm">
-                      ✅ Cod activ • Timp rămas: {formatTimeRemaining()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Chat Sidebar */}
         <div className="w-full lg:w-80 bg-paranormal-900 border-l border-paranormal-700">
-          <ChatComponent 
-            isLive={isLive}
+          <LiveChat 
+            isStreamerView={false}
+            streamId={liveSession?.session_id}
             viewerCount={liveSession?.viewer_count || 0}
           />
         </div>

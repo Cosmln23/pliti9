@@ -187,7 +187,7 @@ export function generateAccessCodeEmailTemplate(accessCode: string, expiresAt: s
                 <span style="color:#22c55e; font-size:40px; font-weight:bold; letter-spacing:3px;">${accessCode}</span>
             </div>
             <p style="color:#f59e0b; font-weight:bold; margin:15px 0 5px 0;">⏰ VALABIL 8 ORE</p>
-            <p style="color:#94a3b8; margin:0; font-size:14px;">Expiră la: ${expiresAt}</p>
+            <p style="color:#94a3b8; margin:0; font-size:14px;">Expiră la sfârșitul transmisiunii LIVE</p>
         </div>
         
         <!-- CTA Button -->
@@ -254,7 +254,7 @@ export function generateAccessCodeWhatsAppMessage(accessCode: string, expiresAt:
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⏰ *VALABIL 8 ORE*
-📅 Expiră: ${expiresAt}
+Expiră când se termină transmisia LIVE
 
 🔴 *Link LIVE:*
 ${liveUrl}

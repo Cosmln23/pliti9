@@ -1,5 +1,6 @@
 // Make.com Automation Service pentru Notificări Automate
 import axios from 'axios'
+import { generateAccessCodeEmailTemplate, generateAccessCodeWhatsAppMessage } from './services'
 
 // Tipuri pentru webhook data
 export interface PaymentWebhookData {
@@ -63,12 +64,20 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
     const payload = {
       email: data.email,
       accessCode: data.accessCode,
-      expiresAt: data.expiresAt,
+      expiresAt: "Expiră la sfârșitul transmisiunii LIVE",
+      expiresAtWhatsApp: "Expiră când se termină transmisia LIVE",
+      expiresAtTechnical: data.expiresAt,
       liveUrl: data.liveUrl,
       phoneNumber: data.phoneNumber,
       amount: data.amount,
       paymentMethod: data.paymentMethod,
-      timestamp: data.timestamp
+      timestamp: data.timestamp,
+      // Template-uri generate pentru utilizare directă în Make.com
+      emailTemplate: generateAccessCodeEmailTemplate(data.accessCode, data.expiresAt, data.liveUrl),
+      whatsappTemplate: generateAccessCodeWhatsAppMessage(data.accessCode, data.expiresAt, data.liveUrl),
+      // Text prieten pentru expirare
+      expiryFriendlyText: "Expiră la sfârșitul transmisiunii LIVE",
+      whatsappExpiryText: "Expiră când se termină transmisia LIVE"
     }
 
     console.log('📨 PAYLOAD SENT TO MAKE.COM:', JSON.stringify(payload, null, 2))

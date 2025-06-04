@@ -196,7 +196,7 @@ Webhook (Vercel) → Make.com → Parallel:
         <div style="background: #1e293b; padding: 20px; border-radius: 10px; text-align: center;">
             <h3 style="color: #22c55e; font-size: 32px;">{{accessCode}}</h3>
             <p style="color: #22c55e;">✅ COD VALABIL 8 ORE!</p>
-            <p style="color: #94a3b8;">Expiră la: {{expiresAt}}</p>
+            <p style="color: #94a3b8;">Expiră la sfârșitul transmisiunii LIVE</p>
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
@@ -242,9 +242,8 @@ Webhook (Vercel) → Make.com → Parallel:
 *Cod de acces:*
 *{{accessCode}}*
 
-⏰ *VALABIL 8 ORE - poți intra/ieși oricând!*
-
-📅 Expiră la: {{expiresAt}}
+⏰ VALABIL 8 ORE
+Expiră când se termină transmisia LIVE
 🔴 Link LIVE: {{liveUrl}}
 
 🛡️ *Chiar dacă LIVE-ul se întrerupe din probleme tehnice, codul tău rămâne valabil!*
@@ -312,7 +311,7 @@ Schedule (Daily 09:00) → Make.com:
 ```text
 ⏰ *COD EXPIRĂ ÎN 2 ORE!* ⏰
 
-Codul tău {{accessCode}} expiră la {{expiresAt}}
+Codul tău {{accessCode}} expiră în curând!
 
 🔴 Intră în LIVE acum: {{liveUrl}}
 

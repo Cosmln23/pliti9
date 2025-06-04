@@ -32,6 +32,16 @@ export interface AccessCode {
   last_used_at?: Date
   usage_count: number
   ip_address?: string
+  active_session_id?: string
+  active_device_info?: {
+    userAgent: string
+    ip: string
+    connectedAt: string
+    sessionId: string
+  }
+  session_started_at?: string
+  last_activity_at?: string
+  previous_sessions?: string
 }
 
 export interface LiveSession {
@@ -56,6 +66,25 @@ export interface ChatMessage {
   message: string
   timestamp?: Date
   ip_address?: string
+}
+
+export interface DeviceInfo {
+  userAgent: string
+  ip: string
+  screenResolution?: string
+  timezone?: string
+}
+
+export interface SessionStatus {
+  canAccess: boolean
+  needsTakeover: boolean
+  currentDevice?: {
+    userAgent: string
+    ip: string
+    connectedAt: string
+    sessionId: string
+  }
+  message: string
 }
 
 // Access Codes CRUD Operations
@@ -125,7 +154,8 @@ export async function getActiveAccessCodes(): Promise<AccessCode[]> {
   }
 
   const result = await pool!.query(
-    'SELECT * FROM access_codes WHERE status = "active" AND expires_at > NOW()'
+    'SELECT * FROM access_codes WHERE status = $1 AND expires_at > NOW()',
+    ['active']
   )
   
   return result.rows as AccessCode[]
@@ -146,8 +176,8 @@ export async function getExpiringAccessCodes(hoursFromNow: number = 2): Promise<
   }
 
   const result = await pool!.query(
-    'SELECT * FROM access_codes WHERE status = "active" AND expires_at > NOW() AND expires_at <= DATE_ADD(NOW(), INTERVAL $1 HOUR)',
-    [hoursFromNow]
+    'SELECT * FROM access_codes WHERE status = $1 AND expires_at > NOW() AND expires_at <= NOW() + INTERVAL $2 HOUR',
+    ['active', hoursFromNow]
   )
   
   return result.rows as AccessCode[]
@@ -164,8 +194,8 @@ export async function expireAccessCode(code: string): Promise<void> {
   }
 
   await pool!.query(
-    'UPDATE access_codes SET status = "expired" WHERE code = $1',
-    [code]
+    'UPDATE access_codes SET status = $1 WHERE code = $2',
+    ['expired', code]
   )
 }
 
@@ -202,7 +232,8 @@ export async function getCurrentLiveSession(): Promise<LiveSession | null> {
   }
 
   const result = await pool!.query(
-    'SELECT * FROM live_sessions WHERE status = "active" ORDER BY started_at DESC LIMIT 1'
+    'SELECT * FROM live_sessions WHERE status = $1 ORDER BY started_at DESC LIMIT 1',
+    ['active']
   )
   
   return result.rows.length > 0 ? result.rows[0] as LiveSession : null
@@ -220,8 +251,8 @@ export async function endLiveSession(sessionId: string): Promise<void> {
   }
 
   await pool!.query(
-    'UPDATE live_sessions SET status = "ended", ended_at = NOW() WHERE session_id = $1',
-    [sessionId]
+    'UPDATE live_sessions SET status = $1, ended_at = NOW() WHERE session_id = $2',
+    ['ended', sessionId]
   )
 }
 
@@ -280,4 +311,285 @@ export async function getChatMessages(sessionId: string, limit: number = 50): Pr
   )
   
   return (result.rows as ChatMessage[]).reverse()
+}
+
+/**
+ * Validează un cod de acces - verifică existența și expirarea
+ */
+export async function validateAccessCode(code: string): Promise<AccessCode | null> {
+  try {
+    const normalizedCode = code.trim().toUpperCase()
+    
+    if (isDemoMode) {
+      const found = demoStorage.accessCodes.find(ac => 
+        ac.code === normalizedCode && 
+        ac.status === 'active' && 
+        new Date(ac.expires_at) > new Date()
+      )
+      console.log('[DEMO] Validate access code:', normalizedCode, !!found)
+      return found || null
+    }
+    
+    const result = await pool!.query(
+      `SELECT * FROM access_codes 
+       WHERE code = $1 AND status = 'active' AND expires_at > CURRENT_TIMESTAMP`,
+      [normalizedCode]
+    )
+
+    if (result.rows.length === 0) {
+      return null
+    }
+
+    return result.rows[0] as AccessCode
+
+  } catch (error) {
+    console.error('Eroare validare cod acces:', error)
+    return null
+  }
+}
+
+/**
+ * Începe o sesiune nouă
+ */
+export async function startSession(code: string, deviceInfo: DeviceInfo): Promise<{ success: boolean, sessionId: string }> {
+  try {
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    if (isDemoMode) {
+      const accessCode = demoStorage.accessCodes.find(ac => ac.code === code)
+      if (accessCode) {
+        accessCode.active_session_id = sessionId
+        accessCode.active_device_info = {
+          userAgent: deviceInfo.userAgent,
+          ip: deviceInfo.ip,
+          connectedAt: new Date().toISOString(),
+          sessionId: sessionId
+        }
+        accessCode.session_started_at = new Date().toISOString()
+        accessCode.last_activity_at = new Date().toISOString()
+        console.log('[DEMO] Started session:', sessionId, 'for code:', code)
+      }
+      return {
+        success: true,
+        sessionId: sessionId
+      }
+    }
+    
+    // Remove status = 'in_use' to avoid constraint violation
+    // Keep status as 'active' and only track session info
+    await pool!.query(
+      `UPDATE access_codes 
+       SET 
+         active_session_id = $1,
+         active_device_info = $2,
+         session_started_at = CURRENT_TIMESTAMP,
+         last_activity_at = CURRENT_TIMESTAMP
+       WHERE code = $3`,
+      [sessionId, JSON.stringify(deviceInfo), code]
+    )
+
+    return {
+      success: true,
+      sessionId: sessionId
+    }
+
+  } catch (error) {
+    console.error('Eroare pornire sesiune:', error)
+    throw error
+  }
+}
+
+/**
+ * Verifică starea sesiunii pentru un cod de acces
+ */
+export async function checkAccessCodeSession(code: string, deviceInfo: DeviceInfo): Promise<SessionStatus> {
+  try {
+    if (isDemoMode) {
+      const accessCode = demoStorage.accessCodes.find(ac => ac.code === code)
+      
+      if (!accessCode) {
+        return {
+          canAccess: false,
+          needsTakeover: false,
+          message: 'Cod invalid sau expirat'
+        }
+      }
+
+      // Verifică expirarea
+      if (new Date() > new Date(accessCode.expires_at)) {
+        return {
+          canAccess: false,
+          needsTakeover: false,
+          message: 'Cod expirat'
+        }
+      }
+
+      // Verifică dacă codul nu este în folosință
+      if (!accessCode.active_session_id) {
+        return {
+          canAccess: true,
+          needsTakeover: false,
+          message: 'Cod disponibil pentru utilizare'
+        }
+      }
+
+      // Verifică dacă e același dispozitiv
+      const currentDevice = accessCode.active_device_info
+      if (currentDevice && 
+          currentDevice.userAgent === deviceInfo.userAgent && 
+          currentDevice.ip === deviceInfo.ip) {
+        return {
+          canAccess: true,
+          needsTakeover: false,
+          message: 'Sesiune existentă pe același dispozitiv'
+        }
+      }
+
+      // Alt dispozitiv încearcă să intre - cere takeover
+      return {
+        canAccess: false,
+        needsTakeover: true,
+        currentDevice: {
+          userAgent: currentDevice?.userAgent || 'Unknown',
+          ip: currentDevice?.ip || 'Unknown',
+          connectedAt: accessCode.session_started_at || new Date().toISOString(),
+          sessionId: accessCode.active_session_id
+        },
+        message: 'Cod în folosință pe alt dispozitiv'
+      }
+    }
+
+    const result = await pool!.query(
+      `SELECT 
+        active_session_id, 
+        active_device_info, 
+        session_started_at,
+        status,
+        expires_at
+      FROM access_codes 
+      WHERE code = $1`,
+      [code]
+    )
+
+    if (result.rows.length === 0) {
+      return {
+        canAccess: false,
+        needsTakeover: false,
+        message: 'Cod invalid sau expirat'
+      }
+    }
+
+    const accessCode = result.rows[0]
+
+    // Verifică expirarea
+    if (new Date() > new Date(accessCode.expires_at)) {
+      return {
+        canAccess: false,
+        needsTakeover: false,
+        message: 'Cod expirat'
+      }
+    }
+
+    // Verifică dacă codul nu este în folosință
+    if (!accessCode.active_session_id) {
+      return {
+        canAccess: true,
+        needsTakeover: false,
+        message: 'Cod disponibil pentru utilizare'
+      }
+    }
+
+    // Verifică dacă e același dispozitiv
+    const currentDevice = accessCode.active_device_info
+    if (currentDevice && 
+        currentDevice.userAgent === deviceInfo.userAgent && 
+        currentDevice.ip === deviceInfo.ip) {
+      return {
+        canAccess: true,
+        needsTakeover: false,
+        message: 'Sesiune existentă pe același dispozitiv'
+      }
+    }
+
+    // Alt dispozitiv încearcă să intre - cere takeover
+    return {
+      canAccess: false,
+      needsTakeover: true,
+      currentDevice: {
+        userAgent: currentDevice?.userAgent || 'Unknown',
+        ip: currentDevice?.ip || 'Unknown',
+        connectedAt: accessCode.session_started_at,
+        sessionId: accessCode.active_session_id
+      },
+      message: 'Cod în folosință pe alt dispozitiv'
+    }
+
+  } catch (error) {
+    console.error('Eroare verificare sesiune:', error)
+    throw error
+  }
+}
+
+/**
+ * Preia sesiunea de pe alt dispozitiv (takeover)
+ */
+export async function takeoverSession(code: string, deviceInfo: DeviceInfo): Promise<{ success: boolean, sessionId: string }> {
+  try {
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // Actualizează sesiunea activă
+    await pool!.query(
+      `UPDATE access_codes 
+       SET 
+         active_session_id = $1,
+         active_device_info = $2,
+         session_started_at = CURRENT_TIMESTAMP,
+         last_activity_at = CURRENT_TIMESTAMP,
+         status = 'in_use',
+         previous_sessions = previous_sessions || $3::jsonb
+       WHERE code = $4`,
+      [
+        newSessionId,
+        JSON.stringify(deviceInfo),
+        JSON.stringify([{
+          ...deviceInfo,
+          takenAt: new Date().toISOString(),
+          action: 'takeover'
+        }]),
+        code
+      ]
+    )
+
+    return {
+      success: true,
+      sessionId: newSessionId
+    }
+
+  } catch (error) {
+    console.error('Eroare takeover sesiune:', error)
+    throw error
+  }
+}
+
+/**
+ * Termină sesiunea
+ */
+export async function endSession(code: string, sessionId: string): Promise<boolean> {
+  try {
+    await pool!.query(
+      `UPDATE access_codes 
+       SET 
+         active_session_id = NULL,
+         active_device_info = NULL,
+         status = 'active'
+       WHERE code = $1 AND active_session_id = $2`,
+      [code, sessionId]
+    )
+
+    return true
+
+  } catch (error) {
+    console.error('Eroare terminare sesiune:', error)
+    return false
+  }
 } 

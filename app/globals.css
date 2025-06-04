@@ -91,7 +91,7 @@ a {
 
 /* Text glow effects */
 .text-glow {
-  text-shadow: 0 0 10px rgba(148, 0, 211, 0.5);
+  text-shadow: 0 0 20px currentColor;
 }
 
 /* Scroll smooth */
@@ -115,4 +115,58 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
+}
+
+/* Custom animations pentru componente */
+.animate-bounce-gentle {
+  animation: bounce-gentle 3s infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Keyframes pentru animații */
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Reduce padding on mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Ensure proper spacing from navbar */
+  .pt-16 {
+    padding-top: 4rem;
+  }
+  
+  /* Better text readability on mobile */
+  .text-xs {
+    font-size: 0.75rem;
+  }
+  
+  /* Prevent horizontal scroll */
+  .overflow-x-hidden {
+    overflow-x: hidden;
+  }
 } 
