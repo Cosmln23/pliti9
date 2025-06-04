@@ -94,11 +94,15 @@ const LivePage = () => {
   const [isYouTubeLive, setIsYouTubeLive] = useState(false)
   const [youtubeVideoId, setYoutubeVideoId] = useState('')
 
-  // YouTube Live override pentru demo
-  const DEMO_YOUTUBE_LIVE = {
+  // Twitch Live configuration  
+  const [isTwitchLive, setIsTwitchLive] = useState(false)
+  const [twitchChannel, setTwitchChannel] = useState('')
+
+  // Twitch Live override pentru demo
+  const DEMO_TWITCH_LIVE = {
     enabled: true,
-    videoId: 'jfKfPfyJRdk', // Live stream demo ID - înlocuiește cu ID-ul tău real
-    title: 'PLIPLI9 PARANORMAL - YouTube Live'
+    channel: 'plipliparanormal', // ÎNLOCUIEȘTE cu username-ul tău Twitch exact
+    title: 'PLIPLI9 PARANORMAL - Twitch Live'
   }
 
   const getDeviceInfo = () => {
@@ -399,13 +403,17 @@ const LivePage = () => {
     return nextLiveTime || 'Se calculează...'
   }
 
-  // Check pentru YouTube Live Demo
+  // Check pentru Twitch Live Demo
   useEffect(() => {
-    if (DEMO_YOUTUBE_LIVE.enabled && hasAccess) {
-      setIsYouTubeLive(true)
-      setYoutubeVideoId(DEMO_YOUTUBE_LIVE.videoId)
+    if (DEMO_TWITCH_LIVE.enabled && hasAccess) {
+      setIsTwitchLive(true)
+      setTwitchChannel(DEMO_TWITCH_LIVE.channel)
       setIsLive(true)
       setConnectionStatus('connected')
+      
+      // Dezactivează YouTube dacă era activ
+      setIsYouTubeLive(false)
+      setYoutubeVideoId('')
     }
   }, [hasAccess])
 
@@ -626,13 +634,15 @@ const LivePage = () => {
         
         {/* Video Player - ocupă majoritatea spațiului */}
         <div className="flex-1 flex items-center justify-center bg-black">
-          {isLive && (liveSession || isYouTubeLive) ? (
+          {isLive && (liveSession || isYouTubeLive || isTwitchLive) ? (
             <VideoPlayer 
               playbackId={liveSession?.playback_id} 
               isLive={true}
               playbackUrl={liveSession?.playback_url}
               isYouTubeLive={isYouTubeLive}
               youtubeVideoId={youtubeVideoId}
+              isTwitchLive={isTwitchLive}
+              twitchChannel={twitchChannel}
             />
           ) : (
             <div className="text-center text-white p-12">
@@ -643,15 +653,18 @@ const LivePage = () => {
                 {connectionStatus === 'checking' ? 'Verifică status LIVE...' : 'LIVE-ul va începe în curând'}
               </h3>
               
-              {/* YouTube Live Status */}
-              {DEMO_YOUTUBE_LIVE.enabled && hasAccess && (
-                <div className="mb-6 p-4 bg-red-600/20 border border-red-600/30 rounded-lg">
+              {/* Twitch Live Status */}
+              {DEMO_TWITCH_LIVE.enabled && hasAccess && (
+                <div className="mb-6 p-4 bg-purple-600/20 border border-purple-600/30 rounded-lg">
                   <div className="flex items-center justify-center space-x-2 mb-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-red-400 font-semibold">YouTube Live Pregătit</span>
+                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                    <span className="text-purple-400 font-semibold">Twitch Stream Pregătit</span>
                   </div>
-                  <p className="text-sm text-red-300">
-                    Stream-ul va începe în curând pe YouTube Live
+                  <p className="text-sm text-purple-300">
+                    Stream-ul va începe în curând pe @{DEMO_TWITCH_LIVE.channel}
+                  </p>
+                  <p className="text-xs text-purple-400 mt-1">
+                    📱 Folosește Streamlabs Mobile pentru a începe transmisia
                   </p>
                 </div>
               )}

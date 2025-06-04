@@ -7,18 +7,22 @@ interface VideoPlayerProps {
   playbackId?: string
   playbackUrl?: string
   youtubeVideoId?: string
+  twitchChannel?: string
   isLive?: boolean
   poster?: string
   isYouTubeLive?: boolean
+  isTwitchLive?: boolean
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
   playbackId, 
   playbackUrl,
   youtubeVideoId,
+  twitchChannel,
   isLive = false, 
   poster,
-  isYouTubeLive = false
+  isYouTubeLive = false,
+  isTwitchLive = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -35,6 +39,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     ? `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&controls=1&modestbranding=1&rel=0&showinfo=0`
     : null
 
+  // Twitch Embed URL construction
+  const twitchEmbedUrl = twitchChannel 
+    ? `https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false`
+    : null
+
   // Livepeer HLS URLs
   const hlsUrl = playbackUrl || (playbackId ? `https://livepeercdn.studio/hls/${playbackId}/index.m3u8` : null)
   
@@ -42,7 +51,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // Simulează conectarea la stream
     const timer = setTimeout(() => {
       setIsLoading(false)
-      if (isLive || isYouTubeLive) {
+      if (isLive || isYouTubeLive || isTwitchLive) {
         setIsPlaying(true) // Auto-play pentru LIVE
         setConnectionStatus('connected')
       } else {
@@ -51,11 +60,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [isLive, isYouTubeLive])
+  }, [isLive, isYouTubeLive, isTwitchLive])
 
   // Simulează verificarea conexiunii pentru LIVE
   useEffect(() => {
-    if (isLive || isYouTubeLive) {
+    if (isLive || isYouTubeLive || isTwitchLive) {
       const checkConnection = setInterval(() => {
         // În aplicația reală, aici ar fi verificarea statusului stream-ului
         const isConnected = Math.random() > 0.05 // 95% chance of connection
@@ -69,7 +78,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       return () => clearInterval(checkConnection)
     }
-  }, [isLive, isYouTubeLive])
+  }, [isLive, isYouTubeLive, isTwitchLive])
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying)
@@ -109,10 +118,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-paranormal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">
-            {isYouTubeLive ? 'Conectare YouTube Live...' : 'Se încarcă stream-ul...'}
+            {isTwitchLive ? 'Conectare Twitch Live...' : 
+             isYouTubeLive ? 'Conectare YouTube Live...' : 
+             'Se încarcă stream-ul...'}
           </p>
           <p className="text-paranormal-300 text-sm mt-2">
-            {isYouTubeLive ? 'Verificăm transmisia live' : 'Pregătim totul pentru tine'}
+            {isTwitchLive ? 'Pregătim transmisia paranormală...' :
+             isYouTubeLive ? 'Verificăm transmisia live' : 
+             'Pregătim totul pentru tine'}
           </p>
         </div>
       </div>
@@ -145,8 +158,54 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div className={`relative group ${isFullscreen ? 'fixed inset-0 z-50' : 'w-full aspect-video'} bg-black rounded-lg overflow-hidden`}>
       
-      {/* YouTube Embed Player */}
-      {isYouTubeLive && youtubeEmbedUrl ? (
+      {/* Twitch Embed Player */}
+      {isTwitchLive && twitchEmbedUrl ? (
+        <div className="w-full h-full relative">
+          <iframe
+            src={twitchEmbedUrl}
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            className="w-full h-full"
+          ></iframe>
+          
+          {/* Twitch Live Overlay */}
+          <div className="absolute top-4 left-4 flex items-center space-x-2 bg-purple-600 px-3 py-1 rounded-lg z-10">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-white text-sm font-semibold">TWITCH LIVE</span>
+          </div>
+          
+          {/* Twitch Link */}
+          <div className="absolute top-4 right-4 z-10">
+            <a 
+              href={`https://www.twitch.tv/${twitchChannel}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 bg-black/70 hover:bg-black/90 px-2 py-1 rounded text-white text-xs transition-all"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Vezi pe Twitch</span>
+            </a>
+          </div>
+          
+          {/* Chat reminder */}
+          <div className="absolute bottom-4 left-4 right-4 z-10">
+            <div className="bg-paranormal-800/90 backdrop-blur-sm rounded-lg p-3 text-center">
+              <p className="text-white text-sm">
+                🎮 <strong>PLIPLI9 PARANORMAL</strong> - Transmisie LIVE din teren! 
+              </p>
+              <p className="text-paranormal-300 text-xs mt-1">
+                💬 Chat-ul nostru este în sidebar-ul din dreapta
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : 
+      
+      /* YouTube Embed Player */
+      isYouTubeLive && youtubeEmbedUrl ? (
         <div className="w-full h-full relative">
           <iframe
             src={youtubeEmbedUrl}
