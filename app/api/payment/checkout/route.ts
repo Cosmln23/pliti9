@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?payment=canceled`,
       customer_email: email,
       metadata: {
         email,
