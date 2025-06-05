@@ -12,9 +12,9 @@ const userCooldowns = new Map<string, number>()
 // Validate message for anti-spam
 function validateMessage(message: string, username: string): string | null {
   // Check for too many consecutive identical characters
-  const consecutiveCharRegex = /(.)\1{3,}/g
+  const consecutiveCharRegex = /(.)\1{4,}/g
   if (consecutiveCharRegex.test(message)) {
-    return 'Prea multe caractere identice consecutive (max 3)'
+    return 'Prea multe caractere identice consecutive (max 4)'
   }
 
   // Check message length

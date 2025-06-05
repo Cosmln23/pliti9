@@ -396,6 +396,10 @@ const LiveChat: React.FC<LiveChatProps> = ({
         <div className="mt-2 text-xs text-gray-500 text-center">
           {isConnected ? 'Conectat' : 'Deconectat'} • Mesajele sunt live pentru toți spectatorii
         </div>
+        
+        <div className="mt-1 text-xs text-gray-600 text-center">
+          ⚠️ Anti-spam: max 4 caractere identice, 3s cooldown
+        </div>
       </div>
     </div>
   )
