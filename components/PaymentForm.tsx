@@ -68,7 +68,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
+    // Validare doar email pentru Stripe Checkout
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      setErrors({ email: 'Email valid este obligatoriu' })
       return
     }
 
@@ -76,14 +78,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
     setErrors({})
 
     try {
-      // Simulează delay pentru plată
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Generează payment intent ID simulat
-      const simulatedPaymentIntentId = `pi_${Math.random().toString(36).substr(2, 12)}`
-      
-      // Apelează API-ul nostru pentru crearea codului de acces
-      const response = await fetch('/api/access-codes/create', {
+      // Creează Stripe Checkout Session
+      const response = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,38 +87,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
         body: JSON.stringify({
           email: formData.email.trim().toLowerCase(),
           phone_number: formData.phone_number.trim() || undefined,
-          amount: 25.00,
-          paymentMethod,
-          paymentIntentId: simulatedPaymentIntentId,
-          sessionId: `session_${Date.now()}`
         }),
       })
 
       const data = await response.json()
 
-      if (data.success && data.data?.accessCode) {
-        setSuccess(true)
-        
-        // Trigger success callback cu codul de acces generat
-        setTimeout(() => {
-          onPaymentSuccess(data.data.accessCode)
-        }, 1500) // Delay pentru a arăta success message
-
-        console.log('Payment processed successfully:', {
-          accessCode: data.data.accessCode,
-          email: data.data.email,
-          expiresAt: data.data.expiresAt
-        })
+      if (data.url) {
+        // Redirect către Stripe Checkout
+        window.location.href = data.url
       } else {
-        throw new Error(data.message || data.error || 'Eroare la procesarea plății')
+        throw new Error(data.error || 'Eroare la crearea sesiunii de plată')
       }
 
     } catch (error) {
-      console.error('Payment failed:', error)
+      console.error('Checkout failed:', error)
       setErrors({ 
         general: error instanceof Error ? error.message : 'Eroare la procesarea plății. Încearcă din nou.' 
       })
-    } finally {
       setIsProcessing(false)
     }
   }
@@ -176,36 +157,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
   return (
     <div className="space-y-6" data-payment-section>
       
-      {/* Payment Method Selection */}
+      {/* Payment Method Info */}
       <div className="space-y-3">
-        <h4 className="font-semibold text-paranormal-800">Metoda de plată</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('stripe')}
-            className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-              paymentMethod === 'stripe'
-                ? 'border-mystery-600 bg-mystery-50 text-mystery-700'
-                : 'border-paranormal-300 text-paranormal-600 hover:border-paranormal-400'
-            }`}
-            disabled={isProcessing}
-          >
-            <CreditCard className="w-4 h-4 mx-auto mb-1" />
-            Card Bancar
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('paypal')}
-            className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
-              paymentMethod === 'paypal'
-                ? 'border-mystery-600 bg-mystery-50 text-mystery-700'
-                : 'border-paranormal-300 text-paranormal-600 hover:border-paranormal-400'
-            }`}
-            disabled={isProcessing}
-          >
-            <div className="w-4 h-4 mx-auto mb-1 bg-blue-600 rounded"></div>
-            PayPal
-          </button>
+        <h4 className="font-semibold text-paranormal-800">Plată cu Card Bancar</h4>
+        <div className="flex items-center space-x-3 p-3 bg-white border border-mystery-200 rounded-lg">
+          <CreditCard className="w-5 h-5 text-mystery-600" />
+          <div>
+            <p className="font-medium text-paranormal-800">Stripe Checkout</p>
+            <p className="text-sm text-paranormal-600">Visa, Mastercard, American Express</p>
+          </div>
         </div>
       </div>
 
@@ -270,108 +230,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
           </div>
         </div>
 
-        {/* Stripe Payment Fields */}
-        {paymentMethod === 'stripe' && (
-          <>
-            {/* Card Number */}
-            <div>
-              <label className="block text-sm font-medium text-paranormal-700 mb-2">
-                Numărul cardului
-              </label>
-              <input
-                type="text"
-                value={formData.cardNumber}
-                onChange={(e) => setFormData({...formData, cardNumber: formatCardNumber(e.target.value)})}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 font-mono ${
-                  errors.cardNumber ? 'border-red-300' : 'border-paranormal-300'
-                }`}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-                disabled={isProcessing}
-                required
-              />
-              {errors.cardNumber && (
-                <p className="mt-1 text-sm text-red-600">{errors.cardNumber}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Expiry Date */}
-              <div>
-                <label className="block text-sm font-medium text-paranormal-700 mb-2">
-                  Data expirării
-                </label>
-                <input
-                  type="text"
-                  value={formData.expiryDate}
-                  onChange={(e) => setFormData({...formData, expiryDate: formatExpiryDate(e.target.value)})}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 font-mono ${
-                    errors.expiryDate ? 'border-red-300' : 'border-paranormal-300'
-                  }`}
-                  placeholder="MM/YY"
-                  maxLength={5}
-                  disabled={isProcessing}
-                  required
-                />
-                {errors.expiryDate && (
-                  <p className="mt-1 text-sm text-red-600">{errors.expiryDate}</p>
-                )}
-              </div>
-
-              {/* CVV */}
-              <div>
-                <label className="block text-sm font-medium text-paranormal-700 mb-2">
-                  CVV
-                </label>
-                <input
-                  type="text"
-                  value={formData.cvv}
-                  onChange={(e) => setFormData({...formData, cvv: e.target.value.replace(/\D/g, '')})}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 font-mono ${
-                    errors.cvv ? 'border-red-300' : 'border-paranormal-300'
-                  }`}
-                  placeholder="123"
-                  maxLength={3}
-                  disabled={isProcessing}
-                  required
-                />
-                {errors.cvv && (
-                  <p className="mt-1 text-sm text-red-600">{errors.cvv}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Cardholder Name */}
-            <div>
-              <label className="block text-sm font-medium text-paranormal-700 mb-2">
-                Numele de pe card
-              </label>
-              <input
-                type="text"
-                value={formData.cardholderName}
-                onChange={(e) => setFormData({...formData, cardholderName: e.target.value})}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mystery-500 ${
-                  errors.cardholderName ? 'border-red-300' : 'border-paranormal-300'
-                }`}
-                placeholder="JOHN SMITH"
-                disabled={isProcessing}
-                required
-              />
-              {errors.cardholderName && (
-                <p className="mt-1 text-sm text-red-600">{errors.cardholderName}</p>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* PayPal Notice */}
-        {paymentMethod === 'paypal' && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700">
-              Vei fi redirecționat către PayPal pentru a finaliza plata în siguranță.
-            </p>
+        {/* Payment Security Info */}
+        <div className="bg-mystery-50 border border-mystery-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 text-mystery-700 mb-2">
+            <Lock className="w-4 h-4" />
+            <span className="font-medium">Plată 100% Securizată cu Stripe</span>
           </div>
-        )}
+          <p className="text-sm text-mystery-600">
+            Vei fi redirecționat către pagina de plată Stripe unde poți introduce datele cardului în siguranță. 
+            Nu stocăm informațiile tale financiare.
+          </p>
+        </div>
+
+
 
         {/* Submit Button */}
         <button
@@ -382,12 +253,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentSuccess }) => {
           {isProcessing ? (
             <>
               <Loader className="w-5 h-5 animate-spin" />
-              <span>Se procesează plata...</span>
+              <span>Se deschide Stripe Checkout...</span>
             </>
           ) : (
             <>
-              <Lock className="w-5 h-5" />
-              <span>Plătește 25 RON - Acces 8h</span>
+              <CreditCard className="w-5 h-5" />
+              <span>Plătește 25 RON cu Stripe</span>
             </>
           )}
         </button>

@@ -22,9 +22,10 @@ const nextConfig = {
     TWILIO_AUTH_TOKEN: 'placeholder_twilio_token',
     TWILIO_WHATSAPP_FROM: 'whatsapp:+14155238886',
     
-    // Stripe (placeholder keys - configurate în ZIUA 2)
-    STRIPE_SECRET_KEY: 'sk_live_placeholder_stripe_secret',
-    STRIPE_WEBHOOK_SECRET: 'whsec_placeholder_stripe_webhook',
+    // Stripe (LIVE KEYS - PRODUCTION READY)
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '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',
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder_stripe_webhook',
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_live_51R3deMGI9uEIaIhweVmifJDIzTGzXZl12OgXPpOn3Bp7oGBSC58bOIBfdrookQzjw7vokvJjSyNV1vALybFED1Qm00gTU5Gfms',
     
     // Site URLs
     NEXT_PUBLIC_SITE_URL: 'https://www.plipli9.com',
