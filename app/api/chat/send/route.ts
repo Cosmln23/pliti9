@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addMessage } from '@/lib/chat-storage'
-import { twitchBot } from '@/lib/twitch-chat'
+import { serverTwitchBot } from '@/lib/twitch-bot-server'
 
 // In-memory storage for demo - in production use database
 const chatMessages: any[] = []
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Send to Twitch Chat if live
     let twitchSent = false
     if (streamId === 'plipli9-paranormal-live') {
-      twitchSent = await twitchBot.sendMessage(username, message.trim())
+      twitchSent = await serverTwitchBot.sendMessage(username, message.trim())
     }
 
     // Keep only last 100 messages per stream

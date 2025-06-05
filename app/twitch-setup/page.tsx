@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { twitchBot } from '@/lib/twitch-chat'
 
 const TwitchSetupPage = () => {
   const [botUsername, setBotUsername] = useState('')
@@ -12,14 +11,25 @@ const TwitchSetupPage = () => {
   const [testMessage, setTestMessage] = useState('')
 
   useEffect(() => {
-    // Check current status
-    const currentStatus = twitchBot.getStatus()
-    setStatus(currentStatus)
-    
-    if (currentStatus.configured) {
-      setBotUsername(currentStatus.botUsername || '')
-      setChannel(currentStatus.channel || '')
+    // Check current status from server
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch('/api/twitch/configure')
+        if (response.ok) {
+          const data = await response.json()
+          setStatus(data.status)
+          
+          if (data.status.configured) {
+            setBotUsername(data.status.botUsername || '')
+            setChannel(data.status.channel || '')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch status:', error)
+      }
     }
+    
+    fetchStatus()
   }, [])
 
   const handleConfigure = async () => {
@@ -31,17 +41,27 @@ const TwitchSetupPage = () => {
     setIsConnecting(true)
     
     try {
-      // Configure the bot
-      twitchBot.configure(botUsername, oauth, channel)
+      // Configure the server bot via API
+      const response = await fetch('/api/twitch/configure', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          botUsername,
+          oauth,
+          channel
+        })
+      })
+
+      const data = await response.json()
       
-      // Try to connect
-      const connected = await twitchBot.connect()
-      
-      if (connected) {
-        setStatus(twitchBot.getStatus())
-        alert('✅ Bot-ul Twitch a fost configurat și conectat!')
+      if (data.success && data.connected) {
+        setStatus(data.status)
+        alert('✅ Bot-ul Twitch a fost configurat și conectat pe server!')
       } else {
         alert('❌ Conectarea a eșuat. Verifică credențialele.')
+        console.error('Configuration failed:', data)
       }
     } catch (error) {
       console.error('Setup error:', error)
@@ -54,18 +74,44 @@ const TwitchSetupPage = () => {
   const handleTestMessage = async () => {
     if (!testMessage) return
     
-    const sent = await twitchBot.sendMessage('TEST_USER', testMessage)
-    if (sent) {
-      alert('✅ Mesaj trimis în Twitch!')
-      setTestMessage('')
-    } else {
-      alert('❌ Nu s-a putut trimite mesajul')
+    try {
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          streamId: 'plipli9-paranormal-live',
+          username: 'TEST_USER',
+          message: testMessage,
+          isStreamer: false
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success && data.twitchForwarded) {
+        alert('✅ Mesaj trimis în Twitch!')
+        setTestMessage('')
+      } else {
+        alert('❌ Nu s-a putut trimite mesajul în Twitch')
+      }
+    } catch (error) {
+      alert('❌ Eroare la trimitere: ' + error)
     }
   }
 
-  const handleDisconnect = () => {
-    twitchBot.disconnect()
-    setStatus(twitchBot.getStatus())
+  const handleDisconnect = async () => {
+    // For now, just refresh status since disconnect would need another API endpoint
+    try {
+      const response = await fetch('/api/twitch/configure')
+      if (response.ok) {
+        const data = await response.json()
+        setStatus(data.status)
+      }
+    } catch (error) {
+      console.error('Failed to refresh status:', error)
+    }
   }
 
   return (
