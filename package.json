@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:mobile": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -51,6 +52,7 @@
   "devDependencies": {
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.18.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "@types/body-parser": "^1.19.5"
   }
 }

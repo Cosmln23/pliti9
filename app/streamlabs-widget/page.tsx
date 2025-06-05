@@ -12,137 +12,98 @@ interface ChatMessage {
 
 const StreamlabsWidget = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [connectionStatus, setConnectionStatus] = useState('connecting')
+  const [isLive, setIsLive] = useState(true)
 
   useEffect(() => {
-    // Demo messages pentru test imediat
-    const demoMessages = [
-      {
-        id: 'demo-1',
-        username: 'ParanormalFan',
-        message: 'Salut PLIPLI9! 👻',
-        timestamp: new Date().toISOString(),
-        type: 'user' as const
-      },
-      {
-        id: 'demo-2', 
-        username: 'PLIPLI9',
-        message: 'Bună seara tuturor! Să începem investigația! 🔍',
-        timestamp: new Date(Date.now() - 30000).toISOString(),
-        type: 'admin' as const
-      }
-    ]
-
-    setMessages(demoMessages)
-    setConnectionStatus('demo')
-
-    // Polling pentru mesaje reale
-    const pollMessages = async () => {
+    // Fetch messages every 3 seconds
+    const fetchMessages = async () => {
       try {
-        const response = await fetch(`/api/chat/messages?streamId=plipli9-paranormal-live&t=${Date.now()}`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        })
-        
+        const response = await fetch(`/api/chat/messages?streamId=plipli9-paranormal-live&limit=5&t=${Date.now()}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-            setMessages(data.messages.slice(-5))
-            setConnectionStatus('live')
+          if (data.messages) {
+            setMessages(data.messages.slice(-5)) // Show only last 5 messages
           }
         }
       } catch (error) {
         console.error('Error fetching messages:', error)
-        // Păstrăm demo messages dacă API nu funcționează
       }
     }
 
-    // Poll la fiecare 5 secunde
-    const interval = setInterval(pollMessages, 5000)
-    
-    // Primul poll după 2 secunde
-    setTimeout(pollMessages, 2000)
-
+    fetchMessages()
+    const interval = setInterval(fetchMessages, 3000)
     return () => clearInterval(interval)
   }, [])
 
   const formatTime = (timestamp: string) => {
-    try {
-      return new Date(timestamp).toLocaleTimeString('ro-RO', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } catch {
-      return '00:00'
-    }
-  }
-
-  const getUsernameColor = (username: string, type: string) => {
-    if (type === 'admin') return 'text-purple-300'
-    
-    const colors = [
-      'text-blue-300', 'text-green-300', 'text-yellow-300', 
-      'text-pink-300', 'text-red-300', 'text-indigo-300',
-      'text-cyan-300', 'text-emerald-300'
-    ]
-    const index = username.length % colors.length
-    return colors[index]
-  }
-
-  const getStatusColor = () => {
-    switch(connectionStatus) {
-      case 'live': return 'bg-green-500'
-      case 'demo': return 'bg-blue-500' 
-      default: return 'bg-yellow-500'
-    }
+    return new Date(timestamp).toLocaleTimeString('ro-RO', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full p-3 pointer-events-none">
-      {/* Connection Status */}
-      <div className="fixed top-2 left-2 opacity-70 pointer-events-none">
-        <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
+    <div className="fixed inset-0 bg-transparent p-4 font-sans text-white overflow-hidden">
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm font-bold text-green-400">PLIPLI9 CHAT</span>
+          <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></div>
+        </div>
+        <span className="text-xs text-gray-400">{messages.length} mesaje</span>
       </div>
 
-      {/* Chat Container */}
-      <div className="flex flex-col-reverse justify-start h-full max-h-[600px] space-y-reverse space-y-2 overflow-hidden">
+      {/* Messages */}
+      <div className="space-y-2 max-h-96 overflow-hidden">
         {messages.map((message, index) => (
           <div 
             key={message.id}
-            className="animate-in slide-in-from-bottom duration-300"
+            className="bg-black/80 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 animate-fadeInUp"
             style={{ 
-              animationDelay: `${index * 100}ms`
+              animationDelay: `${index * 0.1}s`,
+              backdropFilter: 'blur(10px)'
             }}
           >
-            <div className="bg-black/90 backdrop-blur-sm rounded-lg p-2.5 border border-purple-400/40 shadow-xl max-w-[350px]">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className={`font-bold text-xs ${getUsernameColor(message.username, message.type)}`}>
-                  {message.username}
-                  {message.type === 'admin' && ' 👑'}
-                </span>
-                <span className="text-gray-400 text-[10px]">
-                  {formatTime(message.timestamp)}
-                </span>
+            <div className="flex items-center space-x-2 mb-1">
+              <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">
+                {message.username.slice(0, 2).toUpperCase()}
               </div>
-              <div className="text-white text-sm leading-relaxed break-words">
-                {message.message}
-              </div>
+              <span className={`text-sm font-semibold ${
+                message.type === 'admin' ? 'text-red-400' : 'text-purple-400'
+              }`}>
+                {message.username}
+                {message.type === 'admin' && ' 👑'}
+              </span>
+              <span className="text-xs text-gray-400">{formatTime(message.timestamp)}</span>
             </div>
+            <p className="text-white text-sm pl-8">{message.message}</p>
           </div>
         ))}
+        
+        {messages.length === 0 && (
+          <div className="text-center text-gray-400 py-8">
+            <p className="text-sm">👻 Așteptând mesaje...</p>
+          </div>
+        )}
       </div>
-      
-      {/* Branding */}
-      <div className="fixed bottom-3 right-3 opacity-50 pointer-events-none">
-        <div className="bg-purple-600/80 backdrop-blur-sm rounded px-2 py-1 border border-purple-400/30">
-          <span className="text-white text-[10px] font-semibold">
-            PLIPLI9 {connectionStatus === 'live' ? '• LIVE' : '• DEMO'}
-          </span>
-        </div>
-      </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fadeInUp {
+          animation: fadeInUp 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }

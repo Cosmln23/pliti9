@@ -1,3 +1,8 @@
 {
-  "/chat/page": "app/chat/page.js"
+  "/not-found": "app/not-found.js",
+  "/api/chat/messages/route": "app/api/chat/messages/route.js",
+  "/api/chat/send/route": "app/api/chat/send/route.js",
+  "/chat/page": "app/chat/page.js",
+  "/live/page": "app/live/page.js",
+  "/streamlabs-widget/page": "app/streamlabs-widget/page.js"
 }

@@ -56,7 +56,7 @@ const ChatPage = () => {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/chat/messages', {
+      const response = await fetch('/api/chat/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ const ChatPage = () => {
           streamId: 'plipli9-paranormal-live',
           username: username.trim(),
           message: newMessage.trim(),
-          type: 'user'
+          isStreamer: false
         }),
       })
 
