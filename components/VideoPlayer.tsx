@@ -25,7 +25,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   isTwitchLive = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
+  const [isMuted, setIsMuted] = useState(false) // Start unmuted
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [volume, setVolume] = useState(1)
   const [currentTime, setCurrentTime] = useState(0)
@@ -38,12 +38,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // YouTube Live URL construction
   const youtubeEmbedUrl = youtubeVideoId 
-    ? `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&controls=1&modestbranding=1&rel=0&showinfo=0`
+    ? `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0`
     : null
 
   // Twitch Embed URL construction
   const twitchEmbedUrl = twitchChannel 
-    ? `https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false`
+    ? `https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false&volume=1.0`
     : null
 
   // Livepeer HLS URLs
@@ -198,7 +198,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       {isTwitchLive && twitchEmbedUrl ? (
         <div className="w-full h-full relative">
           <iframe
-            src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false&controls=false`}
+            src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&muted=false&volume=1.0&controls=false`}
             width="100%"
             height="100%"
             frameBorder="0"

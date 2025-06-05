@@ -6,6 +6,32 @@ import { serverTwitchBot } from '@/lib/twitch-bot-server'
 const chatMessages: any[] = []
 let messageIdCounter = 1
 
+// Anti-spam protection
+const userCooldowns = new Map<string, number>()
+
+// Validate message for anti-spam
+function validateMessage(message: string, username: string): string | null {
+  // Check for too many consecutive identical characters
+  const consecutiveCharRegex = /(.)\1{3,}/g
+  if (consecutiveCharRegex.test(message)) {
+    return 'Prea multe caractere identice consecutive (max 3)'
+  }
+
+  // Check message length
+  if (message.length > 200) {
+    return 'Mesaj prea lung (max 200 caractere)'
+  }
+
+  // Check user cooldown (3 seconds)
+  const now = Date.now()
+  const lastMessage = userCooldowns.get(username)
+  if (lastMessage && now - lastMessage < 3000) {
+    return 'Așteaptă 3 secunde între mesaje'
+  }
+
+  return null // Valid message
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { streamId, username, message, isStreamer } = await request.json()
@@ -15,6 +41,20 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       )
+    }
+
+    // Anti-spam validation (skip for streamers/admins)
+    if (!isStreamer) {
+      const validationError = validateMessage(message.trim(), username)
+      if (validationError) {
+        return NextResponse.json(
+          { error: validationError },
+          { status: 429 } // Too Many Requests
+        )
+      }
+      
+      // Update user cooldown
+      userCooldowns.set(username, Date.now())
     }
 
     // Create new message using shared storage
