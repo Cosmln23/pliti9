@@ -3,6 +3,7 @@
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
     "/chat/page": [
@@ -18,18 +19,13 @@
     "/streamlabs-widget/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/streamlabs-widget/layout.js",
-      "static/css/app/streamlabs-widget/layout.css"
+      "static/css/app/streamlabs-widget/layout.css",
+      "static/chunks/app/streamlabs-widget/layout.js"
     ],
     "/live/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/live/page.js"
-    ],
-    "/not-found": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/not-found.js"
     ]
   }
 }
