@@ -26,8 +26,31 @@ class ServerTwitchBot {
     return !!this.config.oauth
   }
 
+  // Auto-configure with hardcoded credentials for production
+  autoConfigureForProduction() {
+    if (this.config?.oauth) {
+      console.log('🎮 Bot already configured')
+      return true
+    }
+
+    // Use the credentials from setup
+    this.config = {
+      botUsername: 'plipli9_bot',
+      oauth: 'oauth:ofmzemzx56e09fxzxanwaarmlpchj3',
+      channel: 'plipli9'
+    }
+    
+    console.log(`🎮 AUTO-CONFIGURED for production: #${this.config.channel}`)
+    return true
+  }
+
   // Connect to Twitch IRC
   async connect(): Promise<boolean> {
+    // Auto-configure if not configured
+    if (!this.config?.oauth) {
+      this.autoConfigureForProduction()
+    }
+
     if (!this.config?.oauth) {
       console.log('❌ Twitch bot not configured or missing OAuth token')
       return false
@@ -178,10 +201,11 @@ class ServerTwitchBot {
 // Export singleton instance
 export const serverTwitchBot = new ServerTwitchBot()
 
-// Auto-configure on server startup
-if (process.env.TWITCH_OAUTH_TOKEN) {
-  serverTwitchBot.configure()
+// Auto-configure and connect on server startup
+setTimeout(() => {
+  console.log('🚀 Starting auto-connect to Twitch IRC...')
+  serverTwitchBot.autoConfigureForProduction()
   serverTwitchBot.connect()
-}
+}, 2000) // Give server 2 seconds to start properly
 
 export default serverTwitchBot 
