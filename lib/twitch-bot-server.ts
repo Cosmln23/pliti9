@@ -140,8 +140,8 @@ class ServerTwitchBot {
     }
 
     try {
-      // Format message for Twitch chat
-      const twitchMessage = `[SITE] ${username}: ${message}`
+      // Format message for Twitch chat (clean format without [SITE])
+      const twitchMessage = `${username}: ${message}`
       
       // Send to Twitch IRC
       this.ws.send(`PRIVMSG #${this.config.channel} :${twitchMessage}`)
