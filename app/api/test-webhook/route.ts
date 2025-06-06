@@ -7,7 +7,7 @@ export async function POST() {
     
     const testData = {
       accessCode: 'PLITEST1',
-      email: 'test@plipli9.com',
+      email: 'scinterim09@gmail.com',
       phoneNumber: '+40712345678',
       amount: 25.00,
       paymentMethod: 'stripe',
@@ -49,7 +49,44 @@ export async function POST() {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    message: 'Test webhook endpoint - use POST to trigger test'
-  })
+  try {
+    console.log('🧪 TESTING MAKE.COM WEBHOOK VIA GET...')
+    
+    const testData = {
+      accessCode: 'PLITEST1',
+      email: 'scinterim09@gmail.com',
+      phoneNumber: '+40712345678',
+      amount: 25.00,
+      paymentMethod: 'stripe',
+      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      liveUrl: 'https://www.plipli9.com/live',
+      timestamp: new Date().toISOString()
+    }
+    
+    console.log('📤 DATA SENT TO MAKE.COM:')
+    console.log('- accessCode:', testData.accessCode)
+    console.log('- email:', testData.email)
+    
+    const result = await triggerPaymentSuccessNotification(testData)
+    
+    return NextResponse.json({
+      success: true,
+      webhook_sent: result,
+      test_data: testData,
+      message: result ? '✅ EMAIL TEST TRIMIS CU SUCCES! Verifică inbox-ul!' : '❌ Webhook FAILED!',
+      debug_info: {
+        technical_date: testData.expiresAt,
+        friendly_text: "Expiră la sfârșitul transmisiunii LIVE",
+        whatsapp_text: "Expiră când se termină transmisia LIVE",
+        note: "Verifică email-ul la: " + testData.email
+      }
+    })
+    
+  } catch (error) {
+    console.error('Test webhook failed:', error)
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
 } 
