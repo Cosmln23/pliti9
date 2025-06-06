@@ -36,6 +36,7 @@ export interface ReminderWebhookData {
 // Make.com Webhook URLs (configurate în environment)
 const WEBHOOKS = {
   payment_success: process.env.MAKE_PAYMENT_WEBHOOK_URL || 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
+  whatsapp_test: 'https://hook.eu2.make.com/ida0ge74962m4ske2bw78ywj9szu54ie',
   live_started: process.env.MAKE_LIVE_STARTED_WEBHOOK_URL,
   reminder_2h: process.env.MAKE_REMINDER_WEBHOOK_URL,
   live_ended: process.env.MAKE_LIVE_ENDED_WEBHOOK_URL
@@ -83,8 +84,8 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
     console.log('📨 PAYLOAD SENT TO MAKE.COM:', JSON.stringify(payload, null, 2))
     console.log('📧 Email value specifically:', payload.email)
 
-    // Trimite la Make.com
-    const response = await axios.post(WEBHOOKS.payment_success, payload, {
+    // Trimite la Make.com - Gmail Webhook
+    const emailResponse = await axios.post(WEBHOOKS.payment_success, payload, {
       headers: {
         'Content-Type': 'application/json',
         'X-Webhook-Source': 'plipli9-paranormal',
@@ -93,7 +94,24 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
       timeout: 10000 // 10 secunde timeout
     })
 
-    console.log('✅ Payment notification sent to Make.com:', response.status)
+    console.log('✅ Gmail notification sent to Make.com:', emailResponse.status)
+
+    // Trimite la Make.com - WhatsApp Webhook
+    let whatsappResponse;
+    try {
+      whatsappResponse = await axios.post(WEBHOOKS.whatsapp_test, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Source': 'plipli9-paranormal-whatsapp',
+          'X-Webhook-Secret': process.env.MAKE_WEBHOOK_SECRET
+        },
+        timeout: 10000
+      })
+      console.log('✅ WhatsApp notification sent to Make.com:', whatsappResponse.status)
+    } catch (error) {
+      console.error('❌ WhatsApp webhook failed:', error)
+    }
+
     return true
 
   } catch (error) {
