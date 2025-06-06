@@ -82,7 +82,21 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
     }
 
     console.log('📨 PAYLOAD SENT TO MAKE.COM:', JSON.stringify(payload, null, 2))
-    console.log('📧 Email value specifically:', payload.email)
+    console.log('📧 VARIABILE DISPONIBILE ÎN MAKE.COM:')
+    console.log('{{1.email}} =', payload.email)
+    console.log('{{1.phoneNumber}} =', payload.phoneNumber)
+    console.log('{{1.accessCode}} =', payload.accessCode)
+    console.log('{{1.amount}} =', payload.amount)
+    console.log('{{1.liveUrl}} =', payload.liveUrl)
+    console.log('{{1.paymentMethod}} =', payload.paymentMethod)
+    console.log('{{1.whatsappExpiryText}} =', payload.whatsappExpiryText)
+    console.log('📧 MESAJE TEMPLATE PENTRU TRIMITERE:')
+    console.log('{{1.emailTemplate}} =', payload.emailTemplate ? 'DISPONIBIL - COPY/PASTE IN EMAIL' : 'NULL')
+    console.log('{{1.whatsappTemplate}} =', payload.whatsappTemplate ? 'DISPONIBIL - COPY/PASTE IN WHATSAPP' : 'NULL')
+    console.log('🔥 TEMPLATE EMAIL COMPLET:')
+    console.log(payload.emailTemplate)
+    console.log('🔥 TEMPLATE WHATSAPP COMPLET:')
+    console.log(payload.whatsappTemplate)
 
     // Trimite la Make.com - Gmail Webhook
     const emailResponse = await axios.post(WEBHOOKS.payment_success, payload, {
