@@ -7,8 +7,8 @@ export async function POST() {
     
     const testData = {
       accessCode: 'PLITEST1',
-      email: 'scinterim09@gmail.com',
-      phoneNumber: '+40770912487',
+      email: 'plitan_darius9@yahoo.com',
+      phoneNumber: '+40793608454',
       amount: 25.00,
       paymentMethod: 'stripe',
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
@@ -54,8 +54,8 @@ export async function GET() {
     
     const testData = {
       accessCode: 'PLITEST1',
-      email: 'scinterim09@gmail.com',
-      phoneNumber: '+40770912487',
+      email: 'plitan_darius9@yahoo.com',
+      phoneNumber: '+40793608454',
       amount: 25.00,
       paymentMethod: 'stripe',
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
