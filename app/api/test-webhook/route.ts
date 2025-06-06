@@ -7,7 +7,7 @@ export async function POST() {
     
     const testData = {
       accessCode: 'PLITEST1',
-      email: 'plitan_darius9@yahoo.com',
+      email: 'scinterim09@gmail.com',
       phoneNumber: '+40770912487',
       amount: 25.00,
       paymentMethod: 'stripe',
@@ -54,7 +54,7 @@ export async function GET() {
     
     const testData = {
       accessCode: 'PLITEST1',
-      email: 'plitan_darius9@yahoo.com',
+      email: 'scinterim09@gmail.com',
       phoneNumber: '+40770912487',
       amount: 25.00,
       paymentMethod: 'stripe',
