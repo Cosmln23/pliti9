@@ -145,11 +145,43 @@ const AnalyticsDashboard = () => {
                   const response = await fetch('/api/system/total-control', { method: 'POST' })
                   const systemData = await response.json()
                   console.log('🚀 SISTEM CONTROL TOTAL ACTIVAT:', systemData)
-                  alert(`🚀 CONTROL TOTAL SISTEM ACTIVAT!\n\nStatus: ${systemData.overallStatus.toUpperCase()}\nSiguranta: ${systemData.securityLevel.toUpperCase()}\nUtilizatori activi: ${systemData.activeUsers}\n\nVerifica consola pentru detalii complete!`)
+                  
+                  // Create detailed status report
+                  let statusReport = `🚀 CONTROL TOTAL SISTEM ACTIVAT!\n\n`
+                  statusReport += `📊 STATUS GENERAL: ${systemData.overallStatus.toUpperCase()}\n`
+                  statusReport += `🛡️ NIVEL SECURITATE: ${systemData.securityLevel.toUpperCase()}\n`
+                  statusReport += `👥 UTILIZATORI ACTIVI: ${systemData.activeUsers}\n`
+                  statusReport += `⚡ INCARCAREA SISTEM: ${systemData.systemLoad}%\n\n`
+                  
+                  statusReport += `🔍 ANALIZA DETALIATA COMPONENTE:\n`
+                  statusReport += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
+                  
+                  systemData.components.forEach((component: any) => {
+                    const statusIcon = component.status === 'healthy' ? '✅' : 
+                                     component.status === 'warning' ? '⚠️' : '❌'
+                    const timeMs = component.responseTime ? `(${component.responseTime}ms)` : ''
+                    statusReport += `${statusIcon} ${component.name} ${timeMs}\n`
+                    statusReport += `   └── ${component.details}\n\n`
+                  })
+                  
+                  if (systemData.recommendations?.length > 0) {
+                    statusReport += `💡 RECOMANDARI SISTEM:\n`
+                    statusReport += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
+                    systemData.recommendations.forEach((rec: string) => {
+                      statusReport += `• ${rec}\n`
+                    })
+                  }
+                  
+                  statusReport += `\n🏗️ ARHITECTURA COMPLETA:\n`
+                  statusReport += `Frontend: ${systemData.architecture.frontend}\n`
+                  statusReport += `Backend: ${systemData.architecture.backend}\n`
+                  statusReport += `Database: ${systemData.architecture.database}\n`
+                  
+                  alert(statusReport)
                   await fetchAnalytics()
                 } catch (error) {
                   console.error('Eroare sistem control:', error)
-                  alert('❌ Eroare la activarea sistemului de control!')
+                  alert('❌ Eroare la activarea sistemului de control!\n\nDetalii: ' + error)
                 } finally {
                   setLoading(false)
                 }
