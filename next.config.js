@@ -7,7 +7,7 @@ const nextConfig = {
     DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
     
     // Make.com Webhooks - HARDCODED
-    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
+    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/4w78i9a1ckym4d0f2r6vg5pxbsqz3t7n',
     MAKE_LIVE_STARTED_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_live_started',
     MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
     MAKE_WEBHOOK_SECRET: 'plipli9_paranormal_webhook_secret_2024',

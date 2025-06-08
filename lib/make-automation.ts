@@ -35,7 +35,7 @@ export interface ReminderWebhookData {
 
 // Make.com Webhook URLs (configurate în environment)
 const WEBHOOKS = {
-  payment_success: process.env.MAKE_PAYMENT_WEBHOOK_URL || 'https://hook.eu2.make.com/ic87oy9mss8xsodyiqtm6r6khnuqdjs8',
+  payment_success: process.env.MAKE_PAYMENT_WEBHOOK_URL || 'https://hook.eu2.make.com/4w78i9a1ckym4d0f2r6vg5pxbsqz3t7n',
   whatsapp_test: 'https://hook.eu2.make.com/ida0ge74962m4ske2bw78ywj9szu54ie',
   live_started: process.env.MAKE_LIVE_STARTED_WEBHOOK_URL,
   reminder_2h: process.env.MAKE_REMINDER_WEBHOOK_URL,
