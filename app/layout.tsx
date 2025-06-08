@@ -10,6 +10,7 @@ import AnalyticsProvider from '@/components/AnalyticsProvider'
 import { getSiteSettings, urlFor } from '@/lib/sanity'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.plipli9.com'),
   title: 'Plipli9 Paranormal - Mistere Reale, Locuri Bântuite',
   description: 'Alătură-te lui Plipli9 în explorarea celor mai misterioase locuri bântuite din România. LIVE-uri exclusive, investigații paranormale autentice și experiențe de neuitat.',
   keywords: 'paranormal, fantome, bântuit, live streaming, investigații paranormale, Romania, mistere',

@@ -36,6 +36,15 @@ const nextConfig = {
     // appDir este activat automat în Next.js 14, nu mai e nevoie să îl specificăm
     serverComponentsExternalPackages: ['@planetscale/database']
   },
+
+  // Memory leak prevention compatible cu sistemul de curățare
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000, // Cleanup rapid pentru memory safety
+    pagesBufferLength: 2, // Limit pages în memory
+  },
+  
+  // Optimizare fără cache problematic
+  swcMinify: true,
   
   // Optimizări pentru streaming video
   images: {
