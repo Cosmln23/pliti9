@@ -14,7 +14,8 @@ import {
   CheckCircle,
   AlertCircle,
   Wifi,
-  WifiOff
+  WifiOff,
+  MessageCircle
 } from 'lucide-react'
 import VideoPlayer from '@/components/VideoPlayer'
 import PaymentForm from '@/components/PaymentForm'
@@ -117,6 +118,9 @@ const LivePage = () => {
 
   // Mobile viewport detection
   const [isMobile, setIsMobile] = useState(false)
+  const [showMobileChat, setShowMobileChat] = useState(true)
+  const [chatOpacity, setChatOpacity] = useState(0.8)
+  const [isTyping, setIsTyping] = useState(false)
   
   useEffect(() => {
     const checkMobile = () => {
@@ -127,6 +131,36 @@ const LivePage = () => {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Auto-hide chat on mobile after inactivity
+  useEffect(() => {
+    if (!isMobile) return
+    
+    let hideTimer: NodeJS.Timeout
+    
+    const resetHideTimer = () => {
+      clearTimeout(hideTimer)
+      setShowMobileChat(true)
+      hideTimer = setTimeout(() => {
+        if (!isTyping) {
+          setShowMobileChat(false)
+        }
+      }, 5000) // Hide after 5 seconds of inactivity
+    }
+    
+    resetHideTimer()
+    
+    // Show chat on any touch/click
+    const handleInteraction = () => resetHideTimer()
+    document.addEventListener('touchstart', handleInteraction)
+    document.addEventListener('click', handleInteraction)
+    
+    return () => {
+      clearTimeout(hideTimer)
+      document.removeEventListener('touchstart', handleInteraction)
+      document.removeEventListener('click', handleInteraction)
+    }
+  }, [isMobile, isTyping])
 
   const formatTimeRemaining = () => {
     if (!accessSession?.time_remaining) return 'Calculez...'
@@ -696,11 +730,11 @@ const LivePage = () => {
       {/* Main content area - responsive layout */}
       <div className="flex-1 relative overflow-hidden">
         
-        {/* Mobile Layout - Stack video + overlay chat */}
+        {/* Mobile Layout - TikTok Style with Transparent Chat Overlay */}
         {isMobile ? (
           <>
-            {/* Full screen video */}
-            <div className="absolute inset-0 bg-black flex items-center justify-center">
+            {/* Full screen video - covers entire screen */}
+            <div className="absolute inset-0 bg-black">
               {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
                 <VideoPlayer 
                   playbackId={liveSession?.playback_id} 
@@ -712,23 +746,91 @@ const LivePage = () => {
                   twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
                 />
               ) : (
-                <div className="text-center text-white p-4">
-                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Play className="w-8 h-8 text-gray-400" />
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-white p-4">
+                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Play className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">LIVE va începe în curând</h3>
+                    <p className="text-gray-400 text-sm">Următorul stream în: {formatNextLiveTime()}</p>
                   </div>
-                  <h3 className="text-lg font-bold mb-2">LIVE va începe în curând</h3>
-                  <p className="text-gray-400 text-sm">Următorul stream în: {formatNextLiveTime()}</p>
                 </div>
               )}
             </div>
 
-            {/* Chat overlay - collapsible on mobile */}
-            <div className="absolute bottom-4 left-4 right-4 z-20">
-              <LiveChat 
-                isStreamerView={false}
-                streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
-                viewerCount={liveSession?.viewer_count || 0}
-              />
+            {/* TikTok-style Chat Overlay - Right side, transparent */}
+            <div 
+              className={`absolute right-2 top-20 bottom-20 w-64 z-30 transition-all duration-300 ${
+                showMobileChat ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+              }`}
+              style={{ 
+                backgroundColor: `rgba(0, 0, 0, ${isTyping ? 0.9 : chatOpacity})`,
+                backdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                border: '1px solid rgba(147, 51, 234, 0.3)'
+              }}
+              onTouchStart={() => setIsTyping(true)}
+              onTouchEnd={() => setIsTyping(false)}
+            >
+              <div className="h-full flex flex-col">
+                {/* Compact header for mobile overlay */}
+                <div className="flex items-center justify-between p-2 border-b border-purple-500/30">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-white font-semibold text-sm">Chat</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white text-xs">{liveSession?.viewer_count || 0}</span>
+                    <button
+                      onClick={() => setShowMobileChat(!showMobileChat)}
+                      className="text-purple-400 hover:text-purple-300 p-1"
+                    >
+                      {showMobileChat ? '→' : '←'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* LiveChat Component - Full overlay */}
+                <LiveChat 
+                  isStreamerView={false}
+                  streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
+                  viewerCount={liveSession?.viewer_count || 0}
+                  isMobileOverlay={true}
+                  onTypingChange={setIsTyping}
+                />
+              </div>
+            </div>
+
+            {/* Quick Chat Toggle Button - Always visible */}
+            <button
+              onClick={() => setShowMobileChat(!showMobileChat)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-purple-600/80 backdrop-blur-sm rounded-full flex items-center justify-center z-40 border border-purple-400/50"
+            >
+              <MessageCircle className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Opacity Control - Swipe area at bottom */}
+            <div 
+              className="absolute bottom-4 left-4 right-4 h-12 z-20 flex items-center justify-center"
+              onTouchStart={(e) => {
+                const startY = e.touches[0].clientY
+                const handleTouchMove = (e: TouchEvent) => {
+                  const currentY = e.touches[0].clientY
+                  const deltaY = startY - currentY
+                  const newOpacity = Math.max(0.3, Math.min(1, chatOpacity + deltaY / 200))
+                  setChatOpacity(newOpacity)
+                }
+                const handleTouchEnd = () => {
+                  document.removeEventListener('touchmove', handleTouchMove)
+                  document.removeEventListener('touchend', handleTouchEnd)
+                }
+                document.addEventListener('touchmove', handleTouchMove)
+                document.addEventListener('touchend', handleTouchEnd)
+              }}
+            >
+              <div className="bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 border border-purple-500/30">
+                <span className="text-white text-xs">💬 Swipe ↕ pentru transparență chat</span>
+              </div>
             </div>
           </>
         ) : (

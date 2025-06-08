@@ -16,12 +16,16 @@ interface LiveChatProps {
   isStreamerView?: boolean
   streamId?: string
   viewerCount?: number
+  isMobileOverlay?: boolean
+  onTypingChange?: (isTyping: boolean) => void
 }
 
 const LiveChat: React.FC<LiveChatProps> = ({ 
   isStreamerView = false, 
   streamId = 'plipli9-paranormal-live',
-  viewerCount = 0 
+  viewerCount = 0,
+  isMobileOverlay = false,
+  onTypingChange
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
@@ -219,6 +223,12 @@ const LiveChat: React.FC<LiveChatProps> = ({
     sendMessage()
   }
 
+  // Handle typing change for mobile overlay
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value)
+    onTypingChange?.(e.target.value.length > 0)
+  }
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('ro-RO', {
       hour: '2-digit',
@@ -388,7 +398,7 @@ const LiveChat: React.FC<LiveChatProps> = ({
               ref={inputRef}
               type="text"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               placeholder="Scrie un mesaj..."
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-base"
