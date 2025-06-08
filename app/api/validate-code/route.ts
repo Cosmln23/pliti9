@@ -1,0 +1,178 @@
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+// CONEXIUNEA 4: Access Code Validation (Final Step)
+export async function POST(request: NextRequest) {
+  try {
+    const { accessCode, email } = await request.json();
+    
+    console.log('🔑 VALIDATING ACCESS CODE:', accessCode);
+    console.log('📧 For email:', email);
+    
+    if (!accessCode) {
+      return NextResponse.json({
+        success: false,
+        error: 'Access code is required'
+      }, { status: 400 });
+    }
+    
+    // Load payments database
+    const paymentsFile = path.join(process.cwd(), 'data', 'payments.json');
+    
+    if (!fs.existsSync(paymentsFile)) {
+      return NextResponse.json({
+        success: false,
+        error: 'No payments database found'
+      }, { status: 404 });
+    }
+    
+    const fileContent = fs.readFileSync(paymentsFile, 'utf-8');
+    const payments = JSON.parse(fileContent);
+    
+    // Find payment by access code
+    const payment = payments.find((p: any) => p.accessCode === accessCode);
+    
+    if (!payment) {
+      console.log('❌ Access code not found:', accessCode);
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid access code',
+        message: 'Codul de acces nu este valid sau nu există'
+      }, { status: 404 });
+    }
+    
+    // Check if email matches (optional - for extra security)
+    if (email && payment.email !== email) {
+      console.log('⚠️ Email mismatch for code:', accessCode);
+      return NextResponse.json({
+        success: false,
+        error: 'Email does not match access code',
+        message: 'Email-ul nu corespunde cu codul de acces'
+      }, { status: 403 });
+    }
+    
+    // Check if code is expired
+    const now = new Date();
+    const expiration = new Date(payment.expiresAt);
+    
+    if (now > expiration) {
+      console.log('⏰ Access code expired:', accessCode);
+      return NextResponse.json({
+        success: false,
+        error: 'Access code expired',
+        message: 'Codul de acces a expirat',
+        expiredAt: payment.expiresAt
+      }, { status: 410 });
+    }
+    
+    // Check if already used (optional - implement usage tracking)
+    if (payment.usedAt) {
+      const usedDate = new Date(payment.usedAt).toLocaleString('ro-RO');
+      return NextResponse.json({
+        success: false,
+        error: 'Access code already used',
+        message: `Codul a fost deja folosit la ${usedDate}`,
+        usedAt: payment.usedAt
+      }, { status: 409 });
+    }
+    
+    // Mark as used and update database
+    payment.usedAt = new Date().toISOString();
+    payment.lastAccess = {
+      timestamp: new Date().toISOString(),
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
+      userAgent: request.headers.get('user-agent') || 'unknown'
+    };
+    
+    // Save updated payment data
+    fs.writeFileSync(paymentsFile, JSON.stringify(payments, null, 2));
+    
+    console.log('✅ Access granted for code:', accessCode);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Access granted',
+      accessGranted: true,
+      payment: {
+        accessCode: payment.accessCode,
+        email: payment.email,
+        amount: payment.amount,
+        createdAt: payment.createdAt,
+        expiresAt: payment.expiresAt,
+        usedAt: payment.usedAt
+      },
+      liveUrl: 'https://www.plipli9.com/live',
+      welcomeMessage: `Bun venit la transmisia LIVE paranormală! Codul tău ${accessCode} este valid.`
+    });
+    
+  } catch (error) {
+    console.error('❌ Code validation error:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: 'Code validation failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
+
+// GET method to check code status without using it
+export async function GET(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    const accessCode = url.searchParams.get('code');
+    
+    if (!accessCode) {
+      return NextResponse.json({
+        success: false,
+        error: 'Access code is required'
+      }, { status: 400 });
+    }
+    
+    const paymentsFile = path.join(process.cwd(), 'data', 'payments.json');
+    
+    if (!fs.existsSync(paymentsFile)) {
+      return NextResponse.json({
+        success: false,
+        error: 'No payments database found'
+      }, { status: 404 });
+    }
+    
+    const fileContent = fs.readFileSync(paymentsFile, 'utf-8');
+    const payments = JSON.parse(fileContent);
+    
+    const payment = payments.find((p: any) => p.accessCode === accessCode);
+    
+    if (!payment) {
+      return NextResponse.json({
+        success: false,
+        error: 'Access code not found'
+      }, { status: 404 });
+    }
+    
+    const now = new Date();
+    const expiration = new Date(payment.expiresAt);
+    const isExpired = now > expiration;
+    const isUsed = !!payment.usedAt;
+    
+    return NextResponse.json({
+      success: true,
+      code: accessCode,
+      isValid: !isExpired && !isUsed,
+      isExpired: isExpired,
+      isUsed: isUsed,
+      expiresAt: payment.expiresAt,
+      usedAt: payment.usedAt || null,
+      status: isUsed ? 'used' : isExpired ? 'expired' : 'valid'
+    });
+    
+  } catch (error) {
+    console.error('❌ Code check error:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: 'Code check failed'
+    }, { status: 500 });
+  }
+} 
