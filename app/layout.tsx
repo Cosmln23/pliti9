@@ -9,6 +9,8 @@ import CanonicalURL from '@/components/CanonicalURL'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 import { getSiteSettings, urlFor } from '@/lib/sanity'
 
+// Cache bust: Force rebuild for expand button + Twitch chat styling
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.plipli9.com'),
   title: 'Plipli9 Paranormal - Mistere Reale, Locuri Bântuite',
