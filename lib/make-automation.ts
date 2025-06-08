@@ -112,20 +112,26 @@ export async function triggerPaymentSuccessNotification(data: PaymentWebhookData
 
     console.log('✅ Gmail notification sent to Make.com:', emailResponse.status)
 
+    // DELAY între webhook-uri pentru a evita conflictele
+    await new Promise(resolve => setTimeout(resolve, 2000)) // 2 secunde pauză
+
     // Trimite la Make.com - WhatsApp Webhook
     let whatsappResponse;
     try {
+      console.log('📱 Sending WhatsApp webhook after delay...')
       whatsappResponse = await axios.post(WEBHOOKS.whatsapp_test, payload, {
         headers: {
           'Content-Type': 'application/json',
           'X-Webhook-Source': 'plipli9-paranormal-whatsapp',
           'X-Webhook-Secret': process.env.MAKE_WEBHOOK_SECRET
         },
-        timeout: 10000
+        timeout: 15000 // Timeout mai mare pentru WhatsApp
       })
       console.log('✅ WhatsApp notification sent to Make.com:', whatsappResponse.status)
+      console.log('📱 WhatsApp should arrive at phone in 1-5 seconds')
     } catch (error) {
       console.error('❌ WhatsApp webhook failed:', error)
+      console.error('🔧 Possible causes: Twilio rate limit, Make.com scenario issue, or phone number format')
     }
 
     return true
