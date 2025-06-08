@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check for duplicates by Stripe Payment ID
-    const existingPayment = payments.find(p => p.stripePaymentId === paymentData.stripePaymentId);
+    const existingPayment = payments.find((p: any) => p.stripePaymentId === paymentData.stripePaymentId);
     if (existingPayment) {
       console.log('⚠️ Payment already exists, updating instead');
       existingPayment.updatedAt = new Date().toISOString();
@@ -97,11 +97,11 @@ export async function GET(request: NextRequest) {
     
     // Filter by email or access code if provided
     if (email) {
-      payments = payments.filter(p => p.email === email);
+      payments = payments.filter((p: any) => p.email === email);
     }
     
     if (accessCode) {
-      payments = payments.filter(p => p.accessCode === accessCode);
+      payments = payments.filter((p: any) => p.accessCode === accessCode);
     }
     
     return NextResponse.json({
