@@ -389,61 +389,50 @@ const LivePage = () => {
     setError('')
 
     try {
-      // DEMO MODE - simulăm validarea
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Simulăm că orice cod care începe cu PLI este valid
-      if (code.startsWith('PLI') && code.length >= 6) {
-        const simulatedSession = {
-          code: code,
-          email: 'demo@example.com',
-          expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-          usage_count: 0,
-          time_remaining: {
-            total_minutes: 480,
-            hours: 8,
-            minutes: 0,
-            formatted: '8h 0m'
-          },
-          created_at: new Date().toISOString(),
-          last_used_at: new Date().toISOString()
-        }
-        
-        setHasAccess(true)
-        setAccessSession(simulatedSession)
-        setError('')
-        
-        console.log('DEMO: Access granted successfully:', simulatedSession)
-      } else {
-        setError('Cod de acces invalid. Folosește un cod care începe cu PLI (ex: PLI123ABC)')
-      }
-
-      /* REAL API CALL - disabled pentru demo
+      // REAL API CALL pentru validarea codurilor (inclusiv COS23091)
       const response = await fetch('/api/access-codes/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code: code.trim().toUpperCase() }),
+        body: JSON.stringify({ 
+          code: code.trim().toUpperCase(),
+          deviceInfo: getDeviceInfo()
+        }),
       })
 
       const data = await response.json()
 
-      if (data.success && data.session) {
+      if (data.valid && data.accessCode) {
+        // Construim session data compatibil cu interfața existentă
+        const sessionData = {
+          code: data.accessCode.code,
+          email: data.accessCode.email,
+          expires_at: data.accessCode.expires_at,
+          usage_count: data.accessCode.usage_count,
+          time_remaining: {
+            total_minutes: data.session?.unlimited ? 999999 : 480,
+            hours: data.session?.unlimited ? 999999 : 8,
+            minutes: 0,
+            formatted: data.session?.unlimited ? 'NELIMITAT' : '8h 0m'
+          },
+          created_at: new Date().toISOString(),
+          last_used_at: new Date().toISOString(),
+          unlimited: data.session?.unlimited || false
+        }
+        
         setHasAccess(true)
-        setAccessSession(data.session)
+        setAccessSession(sessionData)
         setError('')
         
-        // Notifică utilizatorul de succes
-        console.log('Access granted successfully:', {
-          code: data.session.code,
-          timeRemaining: data.session.time_remaining.formatted,
-          email: data.session.email
-        })
+        if (data.session?.unlimited) {
+          console.log('🎯 SPECIAL CODE: Unlimited access granted for', data.accessCode.code)
+        } else {
+          console.log('✅ Access granted successfully:', sessionData)
+        }
       } else {
-        setError(data.message || data.error || 'Cod de acces invalid')
+        setError(data.error || 'Cod de acces invalid')
       }
-      */
     } catch (err) {
       console.error('Access validation error:', err)
       setError('Eroare de conexiune. Verifică internetul și încearcă din nou.')
