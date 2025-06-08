@@ -29,7 +29,7 @@ Plipli9 Paranormal - Backup System
     const emailWebhook = 'https://hook.eu2.make.com/4w78i9a1ckym4d0f2r6vg5pxbsqz3t7n';
     
     const emailPayload = {
-      email: fallback_email || 'plitan_darius9@yahoo.com',
+      email: fallback_email || 'admin@plipli9paranormal.com',
       subject: '🚨 WhatsApp BACKUP - Notificare Paranormal',
       message: emailMessage,
       backup_mode: true
@@ -45,7 +45,7 @@ Plipli9 Paranormal - Backup System
       success: true,
       backup_used: 'email',
       original_target: phoneNumber,
-      fallback_email: fallback_email || 'plitan_darius9@yahoo.com',
+      fallback_email: fallback_email || 'admin@plipli9paranormal.com',
       message: 'WhatsApp failed, email backup sent!'
     });
     
