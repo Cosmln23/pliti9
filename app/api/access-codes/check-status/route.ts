@@ -16,6 +16,44 @@ export async function POST(request: NextRequest) {
     // Normalizare cod (uppercase, remove spaces)
     const normalizedCode = code.trim().toUpperCase()
 
+    // SPECIAL CODE: COS23091 - Acces nelimitat pentru testare calitate video
+    if (normalizedCode === 'COS23091') {
+      const futureDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 an în viitor
+      
+      return NextResponse.json({
+        exists: true,
+        code: 'COS23091',
+        email: 'admin@plipli9.com',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        expires_at: futureDate.toISOString(),
+        last_used_at: new Date().toISOString(),
+        usage_count: 0,
+        expired: false,
+        unlimited: true,
+        purpose: 'Video Quality Testing',
+        time_remaining: {
+          total_minutes: 525600, // 1 an în minute
+          hours: 8760, // 1 an în ore
+          minutes: 0,
+          formatted: 'NELIMITAT',
+          percentage: 100
+        },
+        access_info: {
+          type: 'unlimited_testing',
+          can_reenter: true,
+          multiple_sessions: true,
+          resilient_to_interruptions: true,
+          special_code: true
+        },
+        payment_info: {
+          amount: 0,
+          payment_method: 'special_code',
+          payment_intent_id: 'cos23091-unlimited'
+        }
+      })
+    }
+
     // Căutare cod în database
     const accessCode = await getAccessCodeByCode(normalizedCode)
 
@@ -92,7 +130,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const accessCode = await getAccessCodeByCode(code.trim().toUpperCase())
+    const normalizedCode = code.trim().toUpperCase()
+    
+    // SPECIAL CODE: COS23091 - GET endpoint
+    if (normalizedCode === 'COS23091') {
+      return NextResponse.json({
+        exists: true,
+        code: 'COS23091',
+        status: 'active',
+        expired: false,
+        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        usage_count: 0,
+        time_remaining_minutes: 525600, // 1 an în minute
+        created_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
+        unlimited: true,
+        purpose: 'Video Quality Testing'
+      })
+    }
+    
+    const accessCode = await getAccessCodeByCode(normalizedCode)
 
     if (!accessCode) {
       return NextResponse.json({

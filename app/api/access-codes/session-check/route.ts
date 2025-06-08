@@ -27,6 +27,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // SPECIAL CODE: COS23091 - Nu are niciodată conflicte de sesiune
+    if (body.code.trim().toUpperCase() === 'COS23091') {
+      return NextResponse.json({
+        success: true,
+        needsTakeover: false,
+        canAccess: true,
+        message: 'Acces nelimitat - COS23091 Video Quality Testing',
+        unlimited: true,
+        purpose: 'Video Quality Testing'
+      })
+    }
+
     // Verifică starea sesiunii pentru acest cod
     const sessionStatus = await checkAccessCodeSession(body.code, body.deviceInfo)
     

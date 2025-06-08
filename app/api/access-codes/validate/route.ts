@@ -17,7 +17,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validează codul de acces
+    // SPECIAL CODE: COS23091 - Acces nelimitat pentru testare calitate video
+    if (body.code === 'COS23091') {
+      console.log('🎯 SPECIAL CODE ACTIVATED: COS23091 - Unlimited access for video quality testing')
+      
+      return NextResponse.json({
+        valid: true,
+        accessCode: {
+          code: 'COS23091',
+          email: 'admin@plipli9.com',
+          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 an în viitor
+          usage_count: 0
+        },
+        session: {
+          sessionId: `cos23091-${Date.now()}`,
+          deviceInfo: body.deviceInfo,
+          startedAt: new Date().toISOString(),
+          unlimited: true,
+          purpose: 'Video Quality Testing'
+        }
+      })
+    }
+
+    // Validează codul de acces normal
     const accessCode = await validateAccessCode(body.code)
     
     if (!accessCode) {
