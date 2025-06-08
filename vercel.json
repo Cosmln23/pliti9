@@ -46,6 +46,5 @@
   ],
   "regions": ["iad1"],
   "buildCommand": "npm run build",
-  "framework": "nextjs",
-  "forceRestart": true
+  "framework": "nextjs"
 } 
