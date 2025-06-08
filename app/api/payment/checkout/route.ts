@@ -10,13 +10,59 @@ export async function POST(request: NextRequest) {
   try {
     const { email, phone_number } = await request.json()
 
-    // Validare input
-    if (!email || !isValidEmail(email)) {
+    // Enhanced input validation and sanitization
+    if (!email || typeof email !== 'string') {
       return NextResponse.json(
         { error: 'Email valid este obligatoriu' },
         { status: 400 }
       )
     }
+
+    // Sanitize email - remove whitespace and convert to lowercase
+    const sanitizedEmail = email.trim().toLowerCase()
+
+    // Enhanced email validation
+    if (!isValidEmail(sanitizedEmail)) {
+      return NextResponse.json(
+        { error: 'Formatul email-ului este invalid' },
+        { status: 400 }
+      )
+    }
+
+    // Email length validation
+    if (sanitizedEmail.length > 254) {
+      return NextResponse.json(
+        { error: 'Email-ul este prea lung (max 254 caractere)' },
+        { status: 400 }
+      )
+    }
+
+    // Phone number validation and sanitization (if provided)
+    let sanitizedPhone = null
+    if (phone_number) {
+      if (typeof phone_number !== 'string') {
+        return NextResponse.json(
+          { error: 'Numărul de telefon trebuie să fie text' },
+          { status: 400 }
+        )
+      }
+      
+      // Remove all non-digit characters except +
+      sanitizedPhone = phone_number.replace(/[^\d+]/g, '')
+      
+      // Validate phone format (international)
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/
+      if (!phoneRegex.test(sanitizedPhone)) {
+        return NextResponse.json(
+          { error: 'Formatul numărului de telefon este invalid (folosește formatul internațional)' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Rate limiting check - prevent abuse
+    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('remote-addr') || 'unknown'
+    // TODO: Implement rate limiting with Redis or in-memory cache
 
     // Creează Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -38,12 +84,14 @@ export async function POST(request: NextRequest) {
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/live?payment=canceled`,
-      customer_email: email,
+      customer_email: sanitizedEmail,
       metadata: {
-        email,
-        phone_number: phone_number || '',
+        email: sanitizedEmail,
+        phone_number: sanitizedPhone || '',
         access_type: 'live_paranormal',
         validity_hours: '8',
+        client_ip: clientIP,
+        created_at: new Date().toISOString()
       },
     })
 
@@ -54,8 +102,18 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Stripe checkout error:', error)
+    
+    // Enhanced error handling - don't expose internal errors
+    let errorMessage = 'Eroare la procesarea plății. Încearcă din nou.'
+    
+    if (error.code === 'parameter_invalid_empty') {
+      errorMessage = 'Date de plată invalide. Verifică datele introduse.'
+    } else if (error.code === 'amount_too_small') {
+      errorMessage = 'Suma de plată este prea mică.'
+    }
+    
     return NextResponse.json(
-      { error: 'Eroare la procesarea plății. Încearcă din nou.' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

@@ -287,4 +287,157 @@ export const PARANORMAL_CONSTANTS = {
     INSTAGRAM: 'https://instagram.com/plipli9paranormal',
     YOUTUBE: 'https://youtube.com/@plipli9paranormal'
   }
-} as const 
+} as const
+
+/**
+ * Rate Limiting Implementation
+ */
+interface RateLimitEntry {
+  count: number
+  resetTime: number
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>()
+
+/**
+ * Aplică rate limiting pe bază de IP
+ */
+export function applyRateLimit(
+  identifier: string,
+  maxRequests: number = PARANORMAL_CONSTANTS.RATE_LIMIT_REQUESTS,
+  windowMs: number = PARANORMAL_CONSTANTS.RATE_LIMIT_WINDOW
+): { allowed: boolean; remaining: number; resetTime: number } {
+  const now = Date.now()
+  const windowStart = now - windowMs
+  
+  // Curăță intrările expirate
+  Array.from(rateLimitStore.entries()).forEach(([key, entry]) => {
+    if (entry.resetTime < now) {
+      rateLimitStore.delete(key)
+    }
+  })
+
+  const existing = rateLimitStore.get(identifier)
+  
+  if (!existing || existing.resetTime < now) {
+    // Prima cerere în fereastră sau fereastra a expirat
+    rateLimitStore.set(identifier, {
+      count: 1,
+      resetTime: now + windowMs
+    })
+    return {
+      allowed: true,
+      remaining: maxRequests - 1,
+      resetTime: now + windowMs
+    }
+  }
+
+  if (existing.count >= maxRequests) {
+    // Limita depășită
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime: existing.resetTime
+    }
+  }
+
+  // Incrementează contorul
+  existing.count++
+  rateLimitStore.set(identifier, existing)
+
+  return {
+    allowed: true,
+    remaining: maxRequests - existing.count,
+    resetTime: existing.resetTime
+  }
+}
+
+/**
+ * Extrage identificatorul client pentru rate limiting
+ */
+export function getClientIdentifier(request: Request): string {
+  // Prioritizează IP-ul real din headers
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  const remoteAddr = request.headers.get('remote-addr')
+  
+  const ip = forwardedFor?.split(',')[0]?.trim() || realIP || remoteAddr || 'unknown'
+  
+  // Pentru siguranță suplimentară, include și User-Agent
+  const userAgent = request.headers.get('user-agent') || 'unknown'
+  const uaHash = userAgent.substring(0, 50) // Primele 50 caractere
+  
+  return `${ip}:${uaHash}`
+}
+
+/**
+ * Sanitizare avansată pentru input-uri text
+ */
+export function sanitizeTextInput(input: string, maxLength: number = 255): string {
+  if (typeof input !== 'string') {
+    throw new Error('Input trebuie să fie string')
+  }
+  
+  return input
+    .trim()
+    .replace(/[\x00-\x1F\x7F]/g, '') // Elimină caractere de control
+    .replace(/\s+/g, ' ') // Înlocuiește spații multiple cu unul singur
+    .substring(0, maxLength)
+}
+
+/**
+ * Validare email îmbunătățită
+ */
+export function validateEmailAdvanced(email: string): { isValid: boolean; error?: string } {
+  if (typeof email !== 'string') {
+    return { isValid: false, error: 'Email trebuie să fie string' }
+  }
+
+  const sanitized = email.trim().toLowerCase()
+  
+  if (sanitized.length === 0) {
+    return { isValid: false, error: 'Email este obligatoriu' }
+  }
+  
+  if (sanitized.length > 254) {
+    return { isValid: false, error: 'Email prea lung (max 254 caractere)' }
+  }
+
+  // Regex îmbunătățit pentru email
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  if (!emailRegex.test(sanitized)) {
+    return { isValid: false, error: 'Format email invalid' }
+  }
+
+  // Verifică domenii blocate (spam/temp emails)
+  const blockedDomains = ['tempmail.org', '10minutemail.com', 'guerrillamail.com']
+  const domain = sanitized.split('@')[1]
+  if (blockedDomains.includes(domain)) {
+    return { isValid: false, error: 'Domeniu email temporar nu este permis' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * Validare cod de acces îmbunătățită
+ */
+export function validateAccessCodeAdvanced(code: string): { isValid: boolean; error?: string; sanitized?: string } {
+  if (typeof code !== 'string') {
+    return { isValid: false, error: 'Codul trebuie să fie string' }
+  }
+
+  const sanitized = code.trim().toUpperCase().replace(/[-\s]/g, '')
+  
+  if (sanitized.length === 0) {
+    return { isValid: false, error: 'Cod de acces este obligatoriu' }
+  }
+
+  // Format: PLI123ABC (9 caractere total)
+  const pattern = /^PLI\d{3}[A-Z]{3}$/
+  if (!pattern.test(sanitized)) {
+    return { isValid: false, error: 'Format cod invalid (format așteptat: PLI123ABC)' }
+  }
+
+  return { isValid: true, sanitized }
+} 

@@ -1,7 +1,8 @@
 // Test pentru conexiunea reală la database Railway PostgreSQL
 const { Pool } = require('pg');
+require('dotenv').config({ path: '../.env.local' });
 
-const DATABASE_URL = 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway';
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost:5432/plipli9_local';
 
 async function testDatabaseConnection() {
   console.log('🧪 TESTING RAILWAY POSTGRESQL CONNECTION...');

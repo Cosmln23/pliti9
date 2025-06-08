@@ -44,24 +44,18 @@ export async function POST(request: NextRequest) {
       console.log('✅ New payment added to database');
     }
     
-    // Save back to file
+    // PERFORMANCE OPTIMIZATION: Save only to main database, skip individual files
+    // Individual files are redundant and slow down the process
     fs.writeFileSync(paymentsFile, JSON.stringify(payments, null, 2));
     
-    // Also save individual payment file for quick access
-    const individualFile = path.join(process.cwd(), 'data', 'payments', `${paymentData.accessCode}.json`);
-    const paymentDir = path.dirname(individualFile);
-    if (!fs.existsSync(paymentDir)) {
-      fs.mkdirSync(paymentDir, { recursive: true });
-    }
-    fs.writeFileSync(individualFile, JSON.stringify(paymentData, null, 2));
-    
-    console.log('💾 Payment saved successfully');
+    console.log('💾 Payment saved successfully (optimized single write)');
     
     return NextResponse.json({
       success: true,
       message: 'Payment saved to database',
       paymentId: paymentData.id,
-      accessCode: paymentData.accessCode
+      accessCode: paymentData.accessCode,
+      optimization: 'single_write_operation'
     });
     
   } catch (error) {

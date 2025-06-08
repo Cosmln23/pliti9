@@ -4,6 +4,9 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ChatWidget from '@/components/ChatWidget'
+import SEOStructuredData from '@/components/SEOStructuredData'
+import CanonicalURL from '@/components/CanonicalURL'
+import AnalyticsProvider from '@/components/AnalyticsProvider'
 import { getSiteSettings, urlFor } from '@/lib/sanity'
 
 export const metadata: Metadata = {
@@ -72,6 +75,12 @@ export default async function RootLayout({
         {/* Viewport meta pentru responsive design */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         
+        {/* Canonical URL */}
+        <CanonicalURL />
+        
+        {/* Enhanced SEO Structured Data */}
+        <SEOStructuredData type="homepage" />
+        
         {/* Schema.org pentru SEO */}
         <script
           type="application/ld+json"
@@ -93,22 +102,24 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-paranormal-50 font-paranormal antialiased">
-        {/* Layout principal cu navbar fix sus */}
-        <div className="flex flex-col min-h-screen">
-          {/* Navbar fix în partea de sus */}
-          <Navbar logoUrl={logoUrl} siteName={siteName} />
+        <AnalyticsProvider>
+          {/* Layout principal cu navbar fix sus */}
+          <div className="flex flex-col min-h-screen">
+            {/* Navbar fix în partea de sus */}
+            <Navbar logoUrl={logoUrl} siteName={siteName} />
+            
+            {/* Conținutul principal cu padding pentru navbar */}
+            <main className="flex-1 pt-16">
+              {children}
+            </main>
+            
+            {/* Footer */}
+            <Footer siteSettings={siteSettings} />
+          </div>
           
-          {/* Conținutul principal cu padding pentru navbar */}
-          <main className="flex-1 pt-16">
-            {children}
-          </main>
-          
-          {/* Footer */}
-          <Footer siteSettings={siteSettings} />
-        </div>
-        
-        {/* Chat Widget fix jos-stânga pe toate paginile */}
-        <ChatWidget />
+          {/* Chat Widget fix jos-stânga pe toate paginile */}
+          <ChatWidget />
+        </AnalyticsProvider>
         
         {/* Script pentru analytics (Google Analytics sau similar) */}
         {process.env.NODE_ENV === 'production' && (

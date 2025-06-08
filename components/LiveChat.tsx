@@ -70,13 +70,32 @@ const LiveChat: React.FC<LiveChatProps> = ({
   useEffect(() => {
     if (!streamId || !isUsernameSet) return
 
-    // Start polling for messages
+    let currentPollInterval = 3000; // Start with 3 seconds
+    let lastMessageCount = 0;
+    let inactivityCounter = 0;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    // Start polling for messages with smart interval adjustment
     const pollMessages = async () => {
       try {
         const response = await fetch(`/api/chat/messages?streamId=${streamId}&t=${Date.now()}`) // Cache busting for mobile
         if (response.ok) {
           const data = await response.json()
           if (data.messages) {
+            // Smart polling: adjust interval based on activity
+            if (data.messages.length > lastMessageCount) {
+              // New messages - increase frequency
+              currentPollInterval = Math.max(2000, currentPollInterval - 500);
+              inactivityCounter = 0;
+            } else {
+              // No new messages - decrease frequency gradually
+              inactivityCounter++;
+              if (inactivityCounter > 3) {
+                currentPollInterval = Math.min(10000, currentPollInterval + 1000); // Max 10s
+              }
+            }
+            lastMessageCount = data.messages.length;
+
             // Filter out temporary optimistic messages when real messages arrive
             setMessages(prevMessages => {
               const realMessages = data.messages
@@ -95,25 +114,31 @@ const LiveChat: React.FC<LiveChatProps> = ({
             })
             setIsConnected(true)
             
-            console.log(`📱 Mobile chat poll: ${data.messages.length} messages loaded`)
+            console.log(`📱 Smart chat poll: ${data.messages.length} messages (interval: ${currentPollInterval}ms)`)
           }
         } else {
           console.error('Failed to fetch messages:', response.status)
           setIsConnected(false)
+          currentPollInterval = Math.min(8000, currentPollInterval + 1000); // Slow down on errors
         }
       } catch (error) {
         console.error('❌ Mobile polling error:', error)
         setIsConnected(false)
+        currentPollInterval = Math.min(8000, currentPollInterval + 1000); // Slow down on errors
       }
     }
 
-    // Poll every 3 seconds (reduced from 2 seconds)
-    pollInterval.current = setInterval(pollMessages, 3000)
-    pollMessages() // Initial load
+    const scheduleNextPoll = () => {
+      timeoutId = setTimeout(() => {
+        pollMessages().then(scheduleNextPoll);
+      }, currentPollInterval);
+    };
+
+    pollMessages().then(scheduleNextPoll); // Initial load
 
     return () => {
-      if (pollInterval.current) {
-        clearInterval(pollInterval.current)
+      if (timeoutId) {
+        clearTimeout(timeoutId)
       }
     }
   }, [streamId, isUsernameSet])

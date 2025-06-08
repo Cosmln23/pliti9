@@ -5,56 +5,44 @@ export async function POST(request: NextRequest) {
   try {
     const paymentData = await request.json();
     
-    console.log('📱 STARTING NOTIFICATION CHAIN');
+    console.log('📱 STARTING OPTIMIZED NOTIFICATION CHAIN');
     console.log('📧 Email:', paymentData.email);
     console.log('📱 Phone:', paymentData.phoneNumber);
     console.log('🔑 Code:', paymentData.accessCode);
     
+    const startTime = Date.now();
+    
+    // PERFORMANCE OPTIMIZATION: Run email and WhatsApp in parallel
+    const [emailResult, whatsappResult] = await Promise.allSettled([
+      sendEmailNotification(paymentData),
+      sendWhatsAppNotification(paymentData)
+    ]);
+
     const results: any = {
-      email: { success: false, error: null },
-      whatsapp: { success: false, error: null }
+      email: emailResult.status === 'fulfilled' ? emailResult.value : { success: false, error: emailResult.reason?.message || 'Unknown error' },
+      whatsapp: whatsappResult.status === 'fulfilled' ? whatsappResult.value : { success: false, error: whatsappResult.reason?.message || 'Unknown error' }
     };
-    
-    // STEP 1: Send Email (PRIMARY - most reliable)
-    try {
-      console.log('📧 Sending EMAIL notification...');
-      const emailResult = await sendEmailNotification(paymentData);
-      results.email = emailResult;
-      console.log('📧 Email result:', emailResult.success ? '✅ SUCCESS' : '❌ FAILED');
-    } catch (error) {
-      console.error('❌ Email notification failed:', error);
-      results.email.error = error instanceof Error ? error.message : 'Unknown error';
-    }
-    
-    // STEP 2: Send WhatsApp (SECONDARY - bonus if works)
-    try {
-      console.log('📱 Sending WhatsApp notification...');
-      // Add delay to avoid conflicts (as discussed)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const whatsappResult = await sendWhatsAppNotification(paymentData);
-      results.whatsapp = whatsappResult;
-      console.log('📱 WhatsApp result:', whatsappResult.success ? '✅ SUCCESS' : '❌ FAILED');
-    } catch (error) {
-      console.error('❌ WhatsApp notification failed:', error);
-      results.whatsapp.error = error instanceof Error ? error.message : 'Unknown error';
-    }
-    
-    // STEP 3: Update database with notification status
-    try {
-      await updateNotificationStatus(paymentData.stripePaymentId, results);
-    } catch (error) {
+
+    console.log('📧 Email result:', results.email.success ? '✅ SUCCESS' : '❌ FAILED');
+    console.log('📱 WhatsApp result:', results.whatsapp.success ? '✅ SUCCESS' : '❌ FAILED');
+
+    // STEP 3: Update database with notification status (run after notifications for better UX)
+    // This runs asynchronously - don't wait for it to complete the response
+    updateNotificationStatus(paymentData.stripePaymentId, results).catch(error => {
       console.error('⚠️ Failed to update notification status:', error);
-    }
-    
-    console.log('📱 NOTIFICATION CHAIN COMPLETED');
+    });
+
+    const totalTime = Date.now() - startTime;
+    console.log(`📱 NOTIFICATION CHAIN COMPLETED in ${totalTime}ms`);
     
     return NextResponse.json({
       success: true,
       message: 'Notification chain executed',
       results: results,
       primarySuccess: results.email.success,
-      backupSuccess: results.whatsapp.success
+      backupSuccess: results.whatsapp.success,
+      executionTime: totalTime,
+      optimization: 'parallel_execution'
     });
     
   } catch (error) {
@@ -88,7 +76,7 @@ async function sendEmailNotification(paymentData: any) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(emailPayload),
-      signal: AbortSignal.timeout(15000) // 15 second timeout
+      signal: AbortSignal.timeout(8000) // Reduced from 15s to 8s for better performance
     });
     
     if (!response.ok) {
@@ -137,7 +125,7 @@ Intră cu codul pe site și explorează paranormalul alături de Plipli9! 👻
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(whatsappPayload),
-      signal: AbortSignal.timeout(15000) // 15 second timeout
+      signal: AbortSignal.timeout(8000) // Reduced from 15s to 8s for better performance
     });
     
     if (!response.ok) {

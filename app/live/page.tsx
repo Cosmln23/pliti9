@@ -105,6 +105,41 @@ const LivePage = () => {
     title: 'PLIPLI9 PARANORMAL - Twitch Live'
   }
 
+  // Mobile optimization: Format time for smaller screens
+  const formatTimeRemainingMobile = () => {
+    if (!accessSession?.time_remaining) return ''
+    const { hours, minutes } = accessSession.time_remaining
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    }
+    return `${minutes}m`
+  }
+
+  // Mobile viewport detection
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const formatTimeRemaining = () => {
+    if (!accessSession?.time_remaining) return 'Calculez...'
+    
+    const { hours, minutes } = accessSession.time_remaining
+    
+    if (hours > 0) {
+      return isMobile ? `${hours}h ${minutes}m` : `${hours} ore și ${minutes} minute`
+    }
+    
+    return isMobile ? `${minutes}m` : `${minutes} minute`
+  }
+
   const getDeviceInfo = () => {
     return {
       userAgent: navigator.userAgent,
@@ -389,15 +424,6 @@ const LivePage = () => {
     handleAccessCodeSubmit(accessCode)
   }
 
-  // Format timp rămas din sesiunea de acces
-  const formatTimeRemaining = () => {
-    if (!accessSession?.time_remaining) return ''
-    
-    const { hours, minutes } = accessSession.time_remaining
-    if (hours > 0) return `${hours}h ${minutes}m rămas`
-    return `${minutes}m rămas`
-  }
-
   // Format următorul LIVE estimat - now using state
   const formatNextLiveTime = () => {
     return nextLiveTime || 'Se calculează...'
@@ -433,10 +459,11 @@ const LivePage = () => {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-paranormal-50 pt-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-mystery-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-paranormal-600">Se încarcă experiența paranormală...</p>
-        </div>
+        <LoadingSpinner 
+          variant="paranormal" 
+          size="lg" 
+          message="Se încarcă experiența paranormală..."
+        />
       </div>
     )
   }
@@ -486,7 +513,7 @@ const LivePage = () => {
                   'bg-red-100 text-red-800'
                 }`}>
                   {connectionStatus === 'connected' ? <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : 
-                   connectionStatus === 'checking' ? <LoadingSpinner /> : 
+                   connectionStatus === 'checking' ? <LoadingSpinner size="sm" variant="mystery" message="" /> : 
                    <WifiOff className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                   <span className="text-xs">
                     {connectionStatus === 'connected' ? 'Conectat' :
@@ -642,13 +669,15 @@ const LivePage = () => {
   // Dacă utilizatorul are acces, afișează player-ul video și chat-ul
   return (
     <div className="fixed inset-0 bg-black flex flex-col">
-      {/* Simple header - minimal */}
-      <div className="bg-black border-b border-gray-800 px-4 py-2 flex items-center justify-between z-10">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
+      {/* Simple header - minimal & mobile optimized */}
+      <div className="bg-black border-b border-gray-800 px-3 sm:px-4 py-2 flex items-center justify-between z-10">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </div>
-          <span className="text-white font-bold">PLIPLI9 PARANORMAL</span>
+          <span className="text-white font-bold text-sm sm:text-base">
+            {isMobile ? 'PLIPLI9' : 'PLIPLI9 PARANORMAL'}
+          </span>
           {isLive && (
             <div className="flex items-center space-x-1 bg-red-600 px-2 py-1 rounded text-white text-xs">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -658,46 +687,86 @@ const LivePage = () => {
         </div>
         
         {accessSession && (
-          <div className="text-green-400 text-sm">
+          <div className="text-green-400 text-xs sm:text-sm font-medium">
             ⏰ {formatTimeRemaining()}
           </div>
         )}
       </div>
 
-      {/* Main content area - fixed height */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main content area - responsive layout */}
+      <div className="flex-1 relative overflow-hidden">
         
-        {/* Video Player - takes most space */}
-        <div className="flex-1 bg-black flex items-center justify-center">
-          {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
-            <VideoPlayer 
-              playbackId={liveSession?.playback_id} 
-              isLive={true}
-              playbackUrl={liveSession?.playback_url}
-              isYouTubeLive={isYouTubeLive}
-              youtubeVideoId={youtubeVideoId}
-              isTwitchLive={isTwitchLive || (hasAccess && DEMO_TWITCH_LIVE.enabled)}
-              twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
-            />
-          ) : (
-            <div className="text-center text-white p-8">
-              <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Play className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">LIVE va începe în curând</h3>
-              <p className="text-gray-400">Următorul stream în: {formatNextLiveTime()}</p>
+        {/* Mobile Layout - Stack video + overlay chat */}
+        {isMobile ? (
+          <>
+            {/* Full screen video */}
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
+              {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
+                <VideoPlayer 
+                  playbackId={liveSession?.playback_id} 
+                  isLive={true}
+                  playbackUrl={liveSession?.playback_url}
+                  isYouTubeLive={isYouTubeLive}
+                  youtubeVideoId={youtubeVideoId}
+                  isTwitchLive={isTwitchLive || (hasAccess && DEMO_TWITCH_LIVE.enabled)}
+                  twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
+                />
+              ) : (
+                <div className="text-center text-white p-4">
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">LIVE va începe în curând</h3>
+                  <p className="text-gray-400 text-sm">Următorul stream în: {formatNextLiveTime()}</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Chat Sidebar - fixed width */}
-        <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col h-full">
-          <LiveChat 
-            isStreamerView={false}
-            streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
-            viewerCount={liveSession?.viewer_count || 0}
-          />
-        </div>
+            {/* Chat overlay - collapsible on mobile */}
+            <div className="absolute bottom-4 left-4 right-4 z-20">
+              <LiveChat 
+                isStreamerView={false}
+                streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
+                viewerCount={liveSession?.viewer_count || 0}
+              />
+            </div>
+          </>
+        ) : (
+          /* Desktop Layout - Side by side */
+          <div className="flex h-full">
+            {/* Video Player - takes most space */}
+            <div className="flex-1 bg-black flex items-center justify-center">
+              {(isLive && (liveSession || isYouTubeLive || isTwitchLive)) || (hasAccess && DEMO_TWITCH_LIVE.enabled) ? (
+                <VideoPlayer 
+                  playbackId={liveSession?.playback_id} 
+                  isLive={true}
+                  playbackUrl={liveSession?.playback_url}
+                  isYouTubeLive={isYouTubeLive}
+                  youtubeVideoId={youtubeVideoId}
+                  isTwitchLive={isTwitchLive || (hasAccess && DEMO_TWITCH_LIVE.enabled)}
+                  twitchChannel={twitchChannel || (hasAccess && DEMO_TWITCH_LIVE.enabled ? DEMO_TWITCH_LIVE.channel : '')}
+                />
+              ) : (
+                <div className="text-center text-white p-8">
+                  <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">LIVE va începe în curând</h3>
+                  <p className="text-gray-400">Următorul stream în: {formatNextLiveTime()}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Chat Sidebar - fixed width on desktop */}
+            <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col h-full">
+              <LiveChat 
+                isStreamerView={false}
+                streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
+                viewerCount={liveSession?.viewer_count || 0}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

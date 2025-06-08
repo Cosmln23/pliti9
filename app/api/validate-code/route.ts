@@ -1,20 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { applyRateLimit, getClientIdentifier, validateAccessCodeAdvanced } from '@/lib/utils';
 
 // CONEXIUNEA 4: Access Code Validation (Final Step)
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting first
+    const clientId = getClientIdentifier(request as any)
+    const rateLimit = applyRateLimit(clientId, 3, 60000) // 3 requests per minute for validation
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: 'Rate limit exceeded',
+        message: 'Prea multe încercări de validare. Încearcă din nou peste 1 minut.',
+        retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
+      }, { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '3',
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+          'X-RateLimit-Reset': rateLimit.resetTime.toString()
+        }
+      });
+    }
+
     const { accessCode, email } = await request.json();
     
     console.log('🔑 VALIDATING ACCESS CODE:', accessCode);
     console.log('📧 For email:', email);
     
-    if (!accessCode) {
+    // Enhanced access code validation
+    const codeValidation = validateAccessCodeAdvanced(accessCode)
+    if (!codeValidation.isValid) {
       return NextResponse.json({
         success: false,
-        error: 'Access code is required'
+        error: 'Invalid access code format',
+        message: codeValidation.error
       }, { status: 400 });
+    }
+
+    const sanitizedCode = codeValidation.sanitized!
+    
+    // Email validation if provided
+    if (email) {
+      if (typeof email !== 'string') {
+        return NextResponse.json({
+          success: false,
+          error: 'Invalid email format',
+          message: 'Email trebuie să fie text'
+        }, { status: 400 });
+      }
+
+      const emailValidation = email.trim().toLowerCase()
+      if (emailValidation.length > 254) {
+        return NextResponse.json({
+          success: false,
+          error: 'Email too long',
+          message: 'Email prea lung (max 254 caractere)'
+        }, { status: 400 });
+      }
     }
     
     // Load payments database
@@ -30,11 +76,11 @@ export async function POST(request: NextRequest) {
     const fileContent = fs.readFileSync(paymentsFile, 'utf-8');
     const payments = JSON.parse(fileContent);
     
-    // Find payment by access code
-    const payment = payments.find((p: any) => p.accessCode === accessCode);
+    // Find payment by sanitized access code
+    const payment = payments.find((p: any) => p.accessCode === sanitizedCode);
     
     if (!payment) {
-      console.log('❌ Access code not found:', accessCode);
+      console.log('❌ Access code not found:', sanitizedCode);
       return NextResponse.json({
         success: false,
         error: 'Invalid access code',
@@ -44,7 +90,7 @@ export async function POST(request: NextRequest) {
     
     // Check if email matches (optional - for extra security)
     if (email && payment.email !== email) {
-      console.log('⚠️ Email mismatch for code:', accessCode);
+      console.log('⚠️ Email mismatch for code:', sanitizedCode);
       return NextResponse.json({
         success: false,
         error: 'Email does not match access code',
@@ -57,7 +103,7 @@ export async function POST(request: NextRequest) {
     const expiration = new Date(payment.expiresAt);
     
     if (now > expiration) {
-      console.log('⏰ Access code expired:', accessCode);
+      console.log('⏰ Access code expired:', sanitizedCode);
       return NextResponse.json({
         success: false,
         error: 'Access code expired',
@@ -88,7 +134,7 @@ export async function POST(request: NextRequest) {
     // Save updated payment data
     fs.writeFileSync(paymentsFile, JSON.stringify(payments, null, 2));
     
-    console.log('✅ Access granted for code:', accessCode);
+    console.log('✅ Access granted for code:', sanitizedCode);
     
     return NextResponse.json({
       success: true,
@@ -103,7 +149,7 @@ export async function POST(request: NextRequest) {
         usedAt: payment.usedAt
       },
       liveUrl: 'https://www.plipli9.com/live',
-      welcomeMessage: `Bun venit la transmisia LIVE paranormală! Codul tău ${accessCode} este valid.`
+      welcomeMessage: `Bun venit la transmisia LIVE paranormală! Codul tău ${sanitizedCode} este valid.`
     });
     
   } catch (error) {

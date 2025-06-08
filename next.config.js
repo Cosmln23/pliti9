@@ -3,14 +3,14 @@ const nextConfig = {
   env: {
     DEMO_MODE: 'false',
     NEXT_PUBLIC_DEMO_MODE: 'false',
-    // Database Cloud - Railway PostgreSQL - HARDCODED
-    DATABASE_URL: 'postgresql://postgres:NtTMWwpdqEwadluQVrxtSnbGHOOMGePn@switchyard.proxy.rlwy.net:16053/railway',
+    // Database Cloud - Railway PostgreSQL - SECURE
+    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://localhost:5432/plipli9_local',
     
-    // Make.com Webhooks - HARDCODED
-    MAKE_PAYMENT_WEBHOOK_URL: 'https://hook.eu2.make.com/4w78i9a1ckym4d0f2r6vg5pxbsqz3t7n',
-    MAKE_LIVE_STARTED_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_live_started',
-    MAKE_REMINDER_WEBHOOK_URL: 'https://hook.eu1.make.com/placeholder_reminder',
-    MAKE_WEBHOOK_SECRET: 'plipli9_paranormal_webhook_secret_2024',
+    // Make.com Webhooks - SECURE
+    MAKE_PAYMENT_WEBHOOK_URL: process.env.MAKE_PAYMENT_WEBHOOK_URL || 'https://hook.eu2.make.com/4w78i9a1ckym4d0f2r6vg5pxbsqz3t7n',
+    MAKE_LIVE_STARTED_WEBHOOK_URL: process.env.MAKE_LIVE_STARTED_WEBHOOK_URL || 'https://hook.eu1.make.com/placeholder_live_started',
+    MAKE_REMINDER_WEBHOOK_URL: process.env.MAKE_REMINDER_WEBHOOK_URL || 'https://hook.eu1.make.com/placeholder_reminder',
+    MAKE_WEBHOOK_SECRET: process.env.MAKE_WEBHOOK_SECRET || 'dev_webhook_secret_2024',
     
     // OpenAI ChatGPT pentru chat widget
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'sk-placeholder-openai-key-here',
@@ -18,8 +18,8 @@ const nextConfig = {
     // Email & WhatsApp - REAL KEYS
     SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || 'SG-placeholder-sendgrid-key-here',
     SENDGRID_FROM_EMAIL: 'noreply@plipli9paranormal.com',
-    TWILIO_ACCOUNT_SID: 'ACplaceholder_twilio_sid',
-    TWILIO_AUTH_TOKEN: 'placeholder_twilio_token',
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || 'AC_placeholder_twilio_sid',
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || 'placeholder_twilio_token',
     TWILIO_WHATSAPP_FROM: 'whatsapp:+14155238886',
     
     // Stripe (ENVIRONMENT VARIABLES - NO HARDCODED KEYS)
