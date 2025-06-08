@@ -334,21 +334,35 @@ const LiveChat: React.FC<LiveChatProps> = ({
         )}
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {/* Messages Area - Twitch Style */}
+      <div className="flex-1 overflow-y-auto px-2 py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
         {messages.map((message) => (
-          <div key={message.id} className="group">
-            <div className="flex items-start space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {message.username.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-purple-400 font-semibold text-sm">{message.username}</span>
-                  <span className="text-gray-500 text-xs">{formatTime(message.timestamp)}</span>
-                </div>
-                <p className="text-white text-sm break-words">{message.message}</p>
-              </div>
+          <div key={message.id} className="group hover:bg-gray-800/30 px-2 py-1 rounded text-sm leading-tight">
+            <div className="flex items-baseline space-x-1">
+              {/* Twitch-style badges for special users */}
+              {message.username.includes('👾') && (
+                <span className="text-purple-400 text-xs">🎮</span>
+              )}
+              {message.type === 'admin' && (
+                <span className="bg-red-600 text-white text-xs px-1 rounded">ADMIN</span>
+              )}
+              
+              {/* Username with color coding like Twitch */}
+              <span className={`font-bold text-sm ${
+                message.username.includes('👾') ? 'text-purple-300' :
+                message.type === 'admin' ? 'text-red-400' :
+                message.type === 'system' ? 'text-yellow-400' :
+                `text-${['blue', 'green', 'yellow', 'pink', 'purple', 'indigo', 'red', 'orange'][
+                  message.username.charCodeAt(0) % 8
+                ]}-400`
+              }`}>
+                {message.username.replace('👾 ', '')}:
+              </span>
+              
+              {/* Message content */}
+              <span className="text-white break-words flex-1">
+                {message.message}
+              </span>
             </div>
           </div>
         ))}

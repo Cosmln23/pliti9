@@ -121,6 +121,7 @@ const LivePage = () => {
   const [showMobileChat, setShowMobileChat] = useState(true)
   const [chatOpacity, setChatOpacity] = useState(0.8)
   const [isTyping, setIsTyping] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   
   useEffect(() => {
     const checkMobile = () => {
@@ -747,80 +748,110 @@ const LivePage = () => {
               )}
             </div>
 
-            {/* TikTok-style Chat Overlay - Right side, transparent */}
-            <div 
-              className={`absolute right-2 top-20 bottom-20 w-64 z-30 transition-all duration-300 ${
-                showMobileChat ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-              }`}
-              style={{ 
-                backgroundColor: `rgba(0, 0, 0, ${isTyping ? 0.9 : chatOpacity})`,
-                backdropFilter: 'blur(10px)',
-                borderRadius: '12px',
-                border: '1px solid rgba(147, 51, 234, 0.3)'
-              }}
-              onTouchStart={() => setIsTyping(true)}
-              onTouchEnd={() => setIsTyping(false)}
-            >
-              <div className="h-full flex flex-col">
-                {/* Compact header for mobile overlay */}
-                <div className="flex items-center justify-between p-2 border-b border-purple-500/30">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-white font-semibold text-sm">Chat</span>
+            {/* Expand Button - YouTube Style - Bottom Left Corner */}
+            {!isFullscreen && (
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="absolute bottom-4 left-4 w-12 h-12 bg-black/70 backdrop-blur-sm rounded-lg flex items-center justify-center z-50 border border-gray-600/50 hover:bg-black/90 transition-all"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4m-4 0l4 4m8-4h4m0 0v4m0-4l-4 4m4 8v4m0 0h-4m4 0l-4-4M8 20H4m0 0v-4m0 4l4-4" />
+                </svg>
+              </button>
+            )}
+
+            {/* Exit Fullscreen Button - Same position when fullscreen */}
+            {isFullscreen && (
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="absolute bottom-4 left-4 w-12 h-12 bg-black/70 backdrop-blur-sm rounded-lg flex items-center justify-center z-50 border border-gray-600/50 hover:bg-black/90 transition-all"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9l6 6m0-6l-6 6m12-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            )}
+
+            {/* TikTok-style Chat Overlay - Right side, transparent - HIDDEN IN FULLSCREEN */}
+            {!isFullscreen && (
+              <div 
+                className={`absolute right-2 top-20 bottom-20 w-64 z-30 transition-all duration-300 ${
+                  showMobileChat ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+                }`}
+                style={{ 
+                  backgroundColor: `rgba(0, 0, 0, ${isTyping ? 0.9 : chatOpacity})`,
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(147, 51, 234, 0.3)'
+                }}
+                onTouchStart={() => setIsTyping(true)}
+                onTouchEnd={() => setIsTyping(false)}
+              >
+                <div className="h-full flex flex-col">
+                  {/* Compact header for mobile overlay */}
+                  <div className="flex items-center justify-between p-2 border-b border-purple-500/30">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-white font-semibold text-sm">Chat</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white text-xs">{liveSession?.viewer_count || 0}</span>
+                      <button
+                        onClick={() => setShowMobileChat(!showMobileChat)}
+                        className="text-purple-400 hover:text-purple-300 p-1"
+                      >
+                        {showMobileChat ? '→' : '←'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white text-xs">{liveSession?.viewer_count || 0}</span>
-                    <button
-                      onClick={() => setShowMobileChat(!showMobileChat)}
-                      className="text-purple-400 hover:text-purple-300 p-1"
-                    >
-                      {showMobileChat ? '→' : '←'}
-                    </button>
-                  </div>
+
+                  {/* LiveChat Component - Full overlay */}
+                  <LiveChat 
+                    isStreamerView={false}
+                    streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
+                    viewerCount={liveSession?.viewer_count || 0}
+                    isMobileOverlay={true}
+                    onTypingChange={setIsTyping}
+                  />
                 </div>
-
-                {/* LiveChat Component - Full overlay */}
-                <LiveChat 
-                  isStreamerView={false}
-                  streamId={liveSession?.session_id || 'plipli9-paranormal-live'}
-                  viewerCount={liveSession?.viewer_count || 0}
-                  isMobileOverlay={true}
-                  onTypingChange={setIsTyping}
-                />
               </div>
-            </div>
+            )}
 
-            {/* Quick Chat Toggle Button - Always visible */}
-            <button
-              onClick={() => setShowMobileChat(!showMobileChat)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-purple-600/80 backdrop-blur-sm rounded-full flex items-center justify-center z-40 border border-purple-400/50"
-            >
-              <MessageCircle className="w-6 h-6 text-white" />
-            </button>
+            {/* Quick Chat Toggle Button - Always visible - HIDDEN IN FULLSCREEN */}
+            {!isFullscreen && (
+              <button
+                onClick={() => setShowMobileChat(!showMobileChat)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-purple-600/80 backdrop-blur-sm rounded-full flex items-center justify-center z-40 border border-purple-400/50"
+              >
+                <MessageCircle className="w-6 h-6 text-white" />
+              </button>
+            )}
 
-            {/* Opacity Control - Swipe area at bottom */}
-            <div 
-              className="absolute bottom-4 left-4 right-4 h-12 z-20 flex items-center justify-center"
-              onTouchStart={(e) => {
-                const startY = e.touches[0].clientY
-                const handleTouchMove = (e: TouchEvent) => {
-                  const currentY = e.touches[0].clientY
-                  const deltaY = startY - currentY
-                  const newOpacity = Math.max(0.3, Math.min(1, chatOpacity + deltaY / 200))
-                  setChatOpacity(newOpacity)
-                }
-                const handleTouchEnd = () => {
-                  document.removeEventListener('touchmove', handleTouchMove)
-                  document.removeEventListener('touchend', handleTouchEnd)
-                }
-                document.addEventListener('touchmove', handleTouchMove)
-                document.addEventListener('touchend', handleTouchEnd)
-              }}
-            >
-              <div className="bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 border border-purple-500/30">
-                <span className="text-white text-xs">💬 Swipe ↕ pentru transparență chat</span>
+            {/* Opacity Control - Swipe area at bottom - HIDDEN IN FULLSCREEN */}
+            {!isFullscreen && (
+              <div 
+                className="absolute bottom-4 left-4 right-4 h-12 z-20 flex items-center justify-center"
+                onTouchStart={(e) => {
+                  const startY = e.touches[0].clientY
+                  const handleTouchMove = (e: TouchEvent) => {
+                    const currentY = e.touches[0].clientY
+                    const deltaY = startY - currentY
+                    const newOpacity = Math.max(0.3, Math.min(1, chatOpacity + deltaY / 200))
+                    setChatOpacity(newOpacity)
+                  }
+                  const handleTouchEnd = () => {
+                    document.removeEventListener('touchmove', handleTouchMove)
+                    document.removeEventListener('touchend', handleTouchEnd)
+                  }
+                  document.addEventListener('touchmove', handleTouchMove)
+                  document.addEventListener('touchend', handleTouchEnd)
+                }}
+              >
+                <div className="bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 border border-purple-500/30">
+                  <span className="text-white text-xs">💬 Swipe ↕ pentru transparență chat</span>
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           /* Desktop Layout - Side by side */

@@ -128,7 +128,40 @@ class ServerTwitchBot {
         this.ws?.send('PONG :tmi.twitch.tv')
       } else if (line.includes('NOTICE') && line.includes('Login authentication failed')) {
         console.error('❌ Twitch authentication failed - check OAuth token')
+      } else if (line.includes('PRIVMSG')) {
+        // Parse incoming Twitch chat message
+        this.parseTwitchMessage(line)
       }
+    }
+  }
+
+  // Parse and forward Twitch messages to our chat
+  private parseTwitchMessage(line: string) {
+    try {
+      // Format: :username!username@username.tmi.twitch.tv PRIVMSG #channel :message
+      const msgMatch = line.match(/:(.+?)!.+?PRIVMSG\s+#(.+?)\s+:(.+)/)
+      if (msgMatch) {
+        const [, username, channel, message] = msgMatch
+        
+        // Skip our own bot messages to avoid loops
+        if (username === this.config?.botUsername) return
+        
+        console.log(`📱 Twitch → Site: [${username}] ${message}`)
+        
+        // Add to our chat storage with Twitch styling
+        const { addMessage } = require('./chat-storage')
+        addMessage({
+          streamId: 'plipli9-paranormal-live',
+          username: `👾 ${username}`,
+          message: message,
+          timestamp: new Date().toISOString(),
+          type: 'user',
+          likes: 0,
+          source: 'twitch'
+        })
+      }
+    } catch (error) {
+      console.error('❌ Failed to parse Twitch message:', error)
     }
   }
 
