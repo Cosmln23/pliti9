@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log('📱 Phone:', paymentData.phoneNumber);
     console.log('🔑 Code:', paymentData.accessCode);
     
-    const results = {
+    const results: any = {
       email: { success: false, error: null },
       whatsapp: { success: false, error: null }
     };
