@@ -139,6 +139,28 @@ const AnalyticsDashboard = () => {
           
           <div className="flex items-center space-x-4">
             <button
+              onClick={async () => {
+                try {
+                  setLoading(true)
+                  const response = await fetch('/api/system/total-control', { method: 'POST' })
+                  const systemData = await response.json()
+                  console.log('🚀 SISTEM CONTROL TOTAL ACTIVAT:', systemData)
+                  alert(`🚀 CONTROL TOTAL SISTEM ACTIVAT!\n\nStatus: ${systemData.overallStatus.toUpperCase()}\nSiguranta: ${systemData.securityLevel.toUpperCase()}\nUtilizatori activi: ${systemData.activeUsers}\n\nVerifica consola pentru detalii complete!`)
+                  await fetchAnalytics()
+                } catch (error) {
+                  console.error('Eroare sistem control:', error)
+                  alert('❌ Eroare la activarea sistemului de control!')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+              className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-all duration-300 hover:shadow-red-500/25 disabled:opacity-50 border-2 border-red-400"
+            >
+              🚀 CONTROL TOTAL SISTEM
+            </button>
+            
+            <button
               onClick={() => setAutoRefresh(!autoRefresh)}
               className={`p-2 rounded-lg ${autoRefresh ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
             >

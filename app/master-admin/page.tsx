@@ -38,6 +38,19 @@ const MasterAdminDashboard = () => {
       ]
     },
     {
+      category: "👻 Events & Paranormal",
+      tools: [
+        {
+          name: "Events Manager",
+          description: "Manager evenimente paranormale și investigații",
+          url: "/events-manager",
+          icon: Clock,
+          color: "from-purple-600 to-indigo-600",
+          features: ["Event creation", "Live sessions", "Equipment tracking"]
+        }
+      ]
+    },
+    {
       category: "🎥 Streaming & Content",
       tools: [
         {
@@ -92,7 +105,7 @@ const MasterAdminDashboard = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
                 <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-blue-800">5</div>
+                  <div className="text-2xl font-bold text-blue-800">6</div>
                   <div className="text-sm text-blue-600">Admin Tools</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
